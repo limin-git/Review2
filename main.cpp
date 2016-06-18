@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
         }
 
         Console::show_cursor( false );
-        Console::set_font( 20, L"ÃÃ‚Ã‹ÃÃŒÃ¥" );
+        Console::set_font( 20, L"ĞÂËÎÌå" );
         rm.review();
     }
     catch ( boost::filesystem::filesystem_error& e )

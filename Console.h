@@ -58,8 +58,8 @@ public:
         // nFont: (no use)
         // 14 Console
         // 15 Lucida Console
-        // 6  脨脗脣脦脤氓
-        // dwFontSize   Consolas    Lucida Console  脨脗脣脦脤氓
+        // 6  新宋体
+        // dwFontSize   Consolas    Lucida Console  新宋体
         // 10:          5,  10      6,  10          5,  11
         // 12:          6,  12      7,  12          6,  14
         // 14:          7,  14      8,  14          7,  16
@@ -73,9 +73,9 @@ public:
         // Lucida Console
         // Consolas
         // Terminal
-        // 脨脗脣脦脤氓
+        // 新宋体
 
-        SetConsoleOutputCP( face_name == L"脨脗脣脦脤氓" ? 936 : CP_UTF8 ); // DO NOT use CP_ACP
+        SetConsoleOutputCP( face_name == L"新宋体" ? 936 : CP_UTF8 ); // DO NOT use CP_ACP
         HANDLE std_output = GetStdHandle( STD_OUTPUT_HANDLE );
         CONSOLE_FONT_INFOEX f;
         f.cbSize = sizeof( CONSOLE_FONT_INFOEX );
