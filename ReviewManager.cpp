@@ -246,16 +246,47 @@ std::string ReviewManager::wait_for_input( const std::string& message )
 
     std::string input;
     int ch = _getch();
+
     if ( 0 == ch )
     {
         _getch();
-        ch = ' ';
     }
-    else if ( !::isprint( ch ) )
+    else if ( 8 == ch ) // backspace
     {
-        ch = ' ';
+        ch = 'd';
     }
-    input.append( 1, static_cast<char>(ch) );
+    else if ( 224 == ch )
+    {
+        ch = _getch();
+
+        if ( 'K' == ch || 'H' == ch ) // arrow left/up previous
+        {
+            std::cout << "arrow left/up";
+            ch = 'p';
+        }
+        else if ( 'S' == ch ) // delete
+        {
+            ch = 'd';
+            std::cout << "delete";
+        }
+        else
+        {
+            ch = 0;
+        }
+    }
+
+    std::cout << std::endl;
+
+    static const std::string cmd = "pbsldg";
+
+    if ( ch )
+    {
+        if ( cmd.find_first_of( (char)ch ) != std::string::npos )
+        {
+            input.append( 1, static_cast<char>(ch) );
+        }
+    }
+
     //std::getline( std::cin, input );
     system( "CLS" );
     boost::trim(input);
