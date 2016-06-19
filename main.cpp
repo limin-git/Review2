@@ -32,7 +32,11 @@ int main(int argc, char* argv[])
         ( listen_no_string_option, boost::program_options::value<std::string>()->default_value( "false" ), "no original string (true|false)" )
         ( listen_all_option, boost::program_options::value<std::string>()->default_value( "false" ), "listen all? (true|false)" )
         ( upgrade_hash_algorithm_option, boost::program_options::value<std::string>()->default_value( "false" ), "upgrade hash algorithm (true|false)" )
-        ( system_command_option, boost::program_options::value< std::vector<std::string> >()->multitoken(), "system commands" )
+        ( system_font_face_name, boost::program_options::value<std::string>()->default_value( "新宋体" ), "console font name" )
+        ( system_font_size, boost::program_options::value<SHORT>()->default_value( 18 ), "console font size" )
+        ( system_console_width, boost::program_options::value<SHORT>()->default_value( 60 ), "console width" )
+        ( system_console_height, boost::program_options::value<SHORT>()->default_value( 5 ), "console height" )
+        ( system_console_color, boost::program_options::value<std::string>()->default_value( "0x7F" ), "console color" )
         ;
 
     desc.add( Log::get_description() );
@@ -75,11 +79,11 @@ int main(int argc, char* argv[])
             return 0;
         }
 
-        Console::show_cursor( false );
-        Console::set_font( 20, L"新宋体" );
-        Console::set_window( 80, 8 );
-        Console::disable_close_button();
-        Console::set_color( BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE );
+        //Console::show_cursor( false );
+        //Console::set_font( 20, L"新宋体" );
+        //Console::set_window( 80, 8 );
+        //Console::disable_close_button();
+        //Console::set_color( BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE );
         rm.review();
     }
     catch ( boost::filesystem::filesystem_error& e )

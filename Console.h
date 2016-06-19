@@ -55,27 +55,8 @@ public:
 
     static void set_font( SHORT font_size = 14, const std::wstring& face_name = L"Consolas" )
     {
-        // nFont: (no use)
-        // 14 Console
-        // 15 Lucida Console
-        // 6  新宋体
-        // dwFontSize   Consolas    Lucida Console  新宋体
-        // 10:          5,  10      6,  10          5,  11
-        // 12:          6,  12      7,  12          6,  14
-        // 14:          7,  14      8,  14          7,  16
-        // 16:          8,  16      10, 16          8,  18
-        // 18:          8,  18      11, 18          9,  21
-        // 20:          9,  20      12, 20          10, 23
-        // 24:          11, 24      14, 24          12, 27
-        // 28:          13, 28      17, 28          14, 32
-        // 36:          17, 36      22, 36          18, 41
-        // FaceName:
-        // Lucida Console
-        // Consolas
-        // Terminal
-        // 新宋体
-
-        SetConsoleOutputCP( face_name == L"新宋体" ? 936 : CP_UTF8 ); // DO NOT use CP_ACP
+        // Console, Lucida Console, 新宋体
+        SetConsoleOutputCP( face_name == L"新宋体" ? 936 : CP_UTF8 );
         HANDLE std_output = GetStdHandle( STD_OUTPUT_HANDLE );
         CONSOLE_FONT_INFOEX f;
         f.cbSize = sizeof( CONSOLE_FONT_INFOEX );
@@ -85,12 +66,7 @@ public:
         f.FontFamily = FF_DONTCARE;
         f.FontWeight = FW_NORMAL;
         wcscpy_s( f.FaceName, face_name.c_str() );
-
-        if ( 0 == SetCurrentConsoleFontEx( std_output, FALSE, &f ) )
-        {
-            std::cout << "failed: " << GetLastError() << std::endl;
-            return;
-        }
+        SetCurrentConsoleFontEx( std_output, FALSE, &f );
     }
 
     static void disable_close_button()

@@ -39,4 +39,9 @@
 #define upgrade_hash_algorithm_option           "upgrade.hash-algorithm"
 
 #define system_section                          "system"
-#define system_command_option                   "system.command"
+#define system_font_face_name                   "system.font-face-name"
+#define system_font_size                        "system.font-size"
+#define system_console_width                    "system.console-width"
+#define system_console_height                   "system.console-height"
+#define system_console_color                    "system.console-color"
+
