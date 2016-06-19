@@ -93,4 +93,46 @@ public:
         }
     }
 
+    static void disable_close_button()
+    {   
+        HWND w = GetConsoleWindow();
+        HMENU m = GetSystemMenu( w, FALSE );
+        DeleteMenu( m, SC_CLOSE , MF_BYCOMMAND );
+        DeleteMenu( m, SC_MINIMIZE , MF_BYCOMMAND );
+        DeleteMenu( m, SC_MAXIMIZE , MF_BYCOMMAND );
+        DrawMenuBar( w );
+    }
+
+    static void set_color( WORD color )
+    {
+        HANDLE std_output = GetStdHandle( STD_OUTPUT_HANDLE );
+        DWORD written = 0;
+        COORD coord = { 0, 0 };
+        CONSOLE_SCREEN_BUFFER_INFO csbi;
+        GetConsoleScreenBufferInfo( std_output, &csbi );
+        csbi.wAttributes = color;
+        SetConsoleTextAttribute( std_output, csbi.wAttributes );
+        FillConsoleOutputAttribute( std_output, csbi.wAttributes, csbi.dwSize.X * csbi.dwSize.Y, coord, &written ); 
+    }
+
+    static void set_window( SHORT col, SHORT row )
+    {
+        HANDLE std_output = GetStdHandle( STD_OUTPUT_HANDLE );
+        COORD coord = { 0, 0 };
+        COORD size = { col, row };
+        CONSOLE_SCREEN_BUFFER_INFO csbi;
+        GetConsoleScreenBufferInfo( std_output, &csbi );
+
+        // make sure buffer size is bigger window size
+        COORD cur_size = { csbi.srWindow.Right - csbi.srWindow.Left + 1, csbi.srWindow.Bottom - csbi.srWindow.Top + 1 };
+        COORD tmp_buf_size = { std::max<int>(cur_size.X, col), std::max<int>(cur_size.Y, row) };
+        SetConsoleScreenBufferSize( std_output, tmp_buf_size );
+
+        SMALL_RECT new_window = csbi.srWindow;
+        new_window.Right = new_window.Left + col - 1;
+        new_window.Bottom = new_window.Top + row - 1;
+        SetConsoleWindowInfo( std_output, TRUE, &new_window );
+
+        SetConsoleScreenBufferSize( std_output, size );
+    }
 };

@@ -188,6 +188,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ConsoleColor.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ConsoleCommand.h"
 				>
 			</File>

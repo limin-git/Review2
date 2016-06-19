@@ -21,8 +21,8 @@ void ConsoleCommand::update_option( const boost::program_options::variables_map&
 
         for ( size_t i = 0; i < m_commands.size(); ++i )
         {
-            std::system( m_commands[i].c_str() );
-            LOG_DEBUG << m_commands[i];
+            //std::system( m_commands[i].c_str() );
+            //LOG_DEBUG << m_commands[i];
         }
     }
 }

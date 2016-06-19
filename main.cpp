@@ -77,6 +77,9 @@ int main(int argc, char* argv[])
 
         Console::show_cursor( false );
         Console::set_font( 20, L"ÐÂËÎÌå" );
+        Console::set_window( 80, 8 );
+        Console::disable_close_button();
+        Console::set_color( BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE );
         rm.review();
     }
     catch ( boost::filesystem::filesystem_error& e )

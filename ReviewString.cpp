@@ -101,7 +101,7 @@ std::string ReviewString::review()
 
                 std::cout << std::endl;
 
-                static const std::string cmd = "pbsldg";
+                static const std::string cmd = "pbsldgq";
 
                 if ( ch )
                 {

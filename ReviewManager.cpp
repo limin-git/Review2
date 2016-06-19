@@ -58,13 +58,14 @@ void ReviewManager::review()
     std::string c;
     boost::timer::cpu_timer t;
     ReviewString n;
+    bool running = true;
 
     m_history->initialize();
     m_history->synchronize_history( m_loader->get_string_hash_set() );
     update();
     new boost::thread( boost::bind( &ReviewManager::update_thread, this ) );
 
-    while ( true )
+    while ( running )
     {
         n = get_next();
         m_current_reviewing = &n;
@@ -93,6 +94,12 @@ void ReviewManager::review()
                 {
                     c = wait_for_input();
                 }
+            }
+
+            if ( c == "quit" || c == "q" )
+            {
+                running = false;
+                break;
             }
 
             while ( c == "speech" || c == "s" )
@@ -277,7 +284,7 @@ std::string ReviewManager::wait_for_input( const std::string& message )
 
     std::cout << std::endl;
 
-    static const std::string cmd = "pbsldg";
+    static const std::string cmd = "pbsldgq";
 
     if ( ch )
     {
