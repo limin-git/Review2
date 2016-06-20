@@ -91,9 +91,10 @@ void ReviewManager::review()
                 m_current_reviewing = &n;
                 c = n.review();
 
-                if ( c.empty() )
+                if ( c == "next" )
                 {
                     c = wait_for_input();
+                    system( "CLS" );
                 }
             }
 

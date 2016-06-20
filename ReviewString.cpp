@@ -44,7 +44,7 @@ std::string ReviewString::review()
     if ( 0 == m_hash )
     {
         std::cout << "empty." << std::flush;
-        return "";
+        return "next";
     }
 
     if ( m_speech )
@@ -75,6 +75,7 @@ std::string ReviewString::review()
                     return c;
                 }
 
+                std::cout << std::endl;
                 should_wait = false;
                 should_new_line = false;
             }
@@ -109,7 +110,7 @@ std::string ReviewString::review()
             << Utility::get_time_list_string( m_history->get_times( m_hash ) );
     }
 
-    return "";
+    return "next";
 }
 
 
