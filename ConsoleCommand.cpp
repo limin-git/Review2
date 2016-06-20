@@ -3,6 +3,7 @@
 #include "OptionString.h"
 #include "OptionUpdateHelper.h"
 #include "ProgramOptions.h"
+#include "Console.h"
 
 
 ConsoleCommand::ConsoleCommand()
@@ -13,6 +14,7 @@ ConsoleCommand::ConsoleCommand()
 
     show_cursor( false );
     disable_close_button();
+    Console::set_console_ctrl_handler();
 
     ProgramOptions::connect_to_signal( boost::bind( &ConsoleCommand::update_option, this, _1 ) );
 }
