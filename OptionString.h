@@ -15,7 +15,7 @@
 #define file_review_option                      "file.review-name"
 
 #define review_section                          "review"
-#define review_time_span_list_option            "review.time-span-list"
+#define review_schedule                         "review.schedule"
 #define review_minimal_time_option              "review.minimal-time"
 #define review_max_cache_size_option            "review.max-cache-size"
 #define review_auto_update_interval_option      "review.auto-update-interval"

@@ -9,6 +9,7 @@
 #include "OptionString.h"
 #include "ProgramOptions.h"
 #include "OptionUpdateHelper.h"
+#include "Console.h"
 
 
 struct Order
@@ -77,15 +78,15 @@ void ReviewManager::review()
             t.start();
             c = n.review();
 
-            if ( c.empty() )
+            if ( c == "next" )
             {
                 c = wait_for_input();
+                system( "CLS" );
             }
 
-            while ( c == "previous" || c == "p" || c == "back" || c == "b" )
+            while ( c == "back" )
             {
                 system( "CLS" );
-
                 n = get_previous();
                 m_current_reviewing = &n;
                 c = n.review();
@@ -96,19 +97,19 @@ void ReviewManager::review()
                 }
             }
 
-            if ( c == "quit" || c == "q" )
+            if ( c == "quit" )
             {
                 running = false;
                 break;
             }
 
-            while ( c == "speech" || c == "s" )
+            while ( c == "speech" )
             {
                 n.play_speech();
                 c = wait_for_input();
             }
 
-            if ( c == "listen" || c == "l" )
+            if ( c == "listen" )
             {
                 m_is_listening = true;
                 boost::thread t( boost::bind( &ReviewManager::listen_thread, this ) );
@@ -116,12 +117,12 @@ void ReviewManager::review()
                 m_is_listening = false;
             }
 
-            if ( c == "delete" || c == "d" )
+            if ( c == "delete" )
             {
                 m_history->disable( n.get_hash() );
             }
 
-            if ( c == "add-to-group" || c == "g" )
+            if ( c == "add-to-group" )
             {
                 m_review_group.push_back( n );
             }
@@ -244,61 +245,77 @@ ReviewString ReviewManager::get_previous()
 }
 
 
-std::string ReviewManager::wait_for_input( const std::string& message )
+std::string ReviewManager::wait_for_input()
 {
-    if ( ! message.empty() )
-    {
-        std::cout << message << std::flush;
-    }
+    static HANDLE stdinput = GetStdHandle(STD_INPUT_HANDLE); 
+    static INPUT_RECORD input_buffer[128]; 
+    static DWORD num_read = 0;
 
-    std::string input;
-    int ch = _getch();
+    Console::disable_console_mode( ENABLE_QUICK_EDIT_MODE  );
+    SetConsoleMode( stdinput, ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT );
 
-    if ( 0 == ch )
+    while ( true ) 
     {
-        _getch();
-    }
-    else if ( 8 == ch ) // backspace
-    {
-        ch = 'd';
-    }
-    else if ( 224 == ch )
-    {
-        ch = _getch();
+        ReadConsoleInput( stdinput, input_buffer, 128, &num_read );
 
-        if ( 'K' == ch || 'H' == ch ) // arrow left/up previous
+        for ( size_t i = 0; i < num_read; i++) 
         {
-            std::cout << "arrow left/up";
-            ch = 'p';
-        }
-        else if ( 'S' == ch ) // delete
-        {
-            ch = 'd';
-            std::cout << "delete";
-        }
-        else
-        {
-            ch = 0;
+            switch( input_buffer[i].EventType ) 
+            { 
+            case KEY_EVENT:
+                {
+                    KEY_EVENT_RECORD& e = input_buffer[i].Event.KeyEvent;
+                    if ( e.bKeyDown )
+                    {
+                        switch ( e.wVirtualKeyCode )
+                        {
+                        case VK_DELETE:         // Del
+                            return "delete";
+                        case VK_ESCAPE:         // Esc
+                            return "quit";
+                        case VK_LEFT:           // Left
+                        case VK_UP:             // Up
+                        case VK_PRIOR:          // PgUp
+                        case VK_BROWSER_BACK:   // Back
+                        case VK_OEM_MINUS:      // -
+                        case VK_OEM_4:          // [{
+                        case VK_OEM_1:          //;:
+                        case VK_OEM_COMMA:      // ,<
+                            return "back";
+                        }
+                        return "next";
+                    }
+                    break;
+                }
+            case MOUSE_EVENT:
+                {
+                    MOUSE_EVENT_RECORD& e = input_buffer[i].Event.MouseEvent;
+                    switch (e.dwEventFlags)
+                    {
+                    case 0:
+                        switch( e.dwButtonState )
+                        {
+                        case RIGHTMOST_BUTTON_PRESSED:
+                            return "back";
+                        case FROM_LEFT_1ST_BUTTON_PRESSED:
+                            return "next";
+                        }
+                        break;
+                    case DOUBLE_CLICK:
+                    case MOUSE_HWHEELED:
+                    case MOUSE_WHEELED:
+                        return "next";
+                    case MOUSE_MOVED:
+                    default:
+                        break;
+                    }
+                    break;
+                }
+            } 
         }
     }
 
-    std::cout << std::endl;
-
-    static const std::string cmd = "pbsldgq";
-
-    if ( ch )
-    {
-        if ( cmd.find_first_of( (char)ch ) != std::string::npos )
-        {
-            input.append( 1, static_cast<char>(ch) );
-        }
-    }
-
-    //std::getline( std::cin, input );
-    system( "CLS" );
-    boost::trim(input);
-    input.erase( std::remove_if( input.begin(), input.end(), boost::is_any_of("\\[]+-") ), input.end() );
-    return input;
+    return "next";
 }
 
 
@@ -488,7 +505,11 @@ void ReviewManager::listen_thread()
         }
 
         system( "CLS" );
-        system( ( "TITLE listen - " + boost::lexical_cast<std::string>( m_listening_list.size() ) ).c_str() );
+        std::stringstream strm;
+        strm << "TITLE listen - " << m_listening_list.size();
+        std::string title = strm.str();
+        SetConsoleTitleA( strm.str().c_str() );
+        //system( ( "TITLE listen - " + boost::lexical_cast<std::string>( m_listening_list.size() ) ).c_str() );
 
         if ( ! m_listen_no_string )
         {

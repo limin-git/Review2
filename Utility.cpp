@@ -309,4 +309,28 @@ namespace Utility
         return x;
     }
 
+
+    std::wstring to_wstring( const std ::string& s, int code_page )
+    {
+        static wchar_t buffer[ 1024 * 1024];
+        MultiByteToWideChar( code_page , 0, s. c_str(), -1, buffer , 1024 * 1024 );
+        return std ::wstring( buffer );
+    }
+
+
+    std::string to_string( const std ::wstring& ws, int code_page )
+    {
+        static char buffer[ 1024 * 1024];
+        WideCharToMultiByte( code_page , 0, ws. c_str(), -1, buffer , 1024 * 1024, 0, 0 );
+        return std ::string( buffer );
+    }
+
+
+    void print_utf( const std::string& s )
+    {
+        static HANDLE std_output = GetStdHandle( STD_OUTPUT_HANDLE );
+        std::wstring ws = to_wstring( s, CP_UTF8 );
+        WriteConsoleW( std_output, ws.c_str(), ws.size(), 0, 0 );
+    }
+
 }

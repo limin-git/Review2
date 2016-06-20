@@ -9,37 +9,46 @@ class Console
 {
 public:
 
-    static void show_cursor( BOOL visible = true )
+    static HANDLE stdoutput()
     {
-        HANDLE std_output = GetStdHandle( STD_OUTPUT_HANDLE );
+        static HANDLE output = GetStdHandle( STD_OUTPUT_HANDLE );
+        return output;
+    }
+
+    static HANDLE stdinput()
+    {
+        static HANDLE input = GetStdHandle( STD_INPUT_HANDLE );
+        return input;
+    }
+
+    static void show_cursor( BOOL visible = true, HANDLE output_handle = stdoutput() )
+    {
         CONSOLE_CURSOR_INFO cursor_info;
-        GetConsoleCursorInfo( std_output, &cursor_info );
+        GetConsoleCursorInfo( output_handle, &cursor_info );
 
         if ( visible != cursor_info.bVisible )
         {
             cursor_info.bVisible = visible;
-            SetConsoleCursorInfo( std_output, &cursor_info );
+            SetConsoleCursorInfo( output_handle, &cursor_info );
         }
     }
 
-    static void fix_utf8_output()
+    static void fix_utf8_output( HANDLE output_handle = stdoutput() )
     {
-        HANDLE std_output = GetStdHandle( STD_OUTPUT_HANDLE );
         CONSOLE_SCREEN_BUFFER_INFO csbinfo;
-        GetConsoleScreenBufferInfo( std_output, &csbinfo );
+        GetConsoleScreenBufferInfo( output_handle, &csbinfo );
         COORD coord = { 0, 0 };
         CHAR_INFO chiFill;
         chiFill.Char.UnicodeChar = L' ';
-        ScrollConsoleScreenBuffer( std_output, &csbinfo.srWindow, NULL, coord, &chiFill  );
+        ScrollConsoleScreenBuffer( output_handle, &csbinfo.srWindow, NULL, coord, &chiFill  );
     }
 
-    static void print_font_info()
+    static void print_font_info( HANDLE output_handle = stdoutput() )
     {
         CONSOLE_FONT_INFOEX f;
         f.cbSize = sizeof( CONSOLE_FONT_INFOEX );
-        HANDLE std_output = GetStdHandle( STD_OUTPUT_HANDLE );
 
-        if ( 0 == GetCurrentConsoleFontEx( std_output, TRUE, &f ) )
+        if ( 0 == GetCurrentConsoleFontEx( output_handle, TRUE, &f ) )
         {
             std::cout << "failed: " << GetLastError() << std::endl;
             return;
@@ -53,11 +62,29 @@ public:
             << L"FaceName  : " << f.FaceName << std::endl;
     }
 
-    static void set_font( SHORT font_size = 14, const std::wstring& face_name = L"Consolas" )
+    static void set_font( SHORT font_size = 14, const std::wstring& face_name = L"Consolas", HANDLE output_handle = stdoutput() )
     {
-        // Console, Lucida Console, 新宋体
-        SetConsoleOutputCP( face_name == L"新宋体" ? 936 : CP_UTF8 );
-        HANDLE std_output = GetStdHandle( STD_OUTPUT_HANDLE );
+        // nFont: (no use)
+        // 14 Console
+        // 15 Lucida Console
+        // 6  新宋体
+        // dwFontSize   Consolas    Lucida Console  新宋体
+        // 10:          5,  10      6,  10          5,  11
+        // 12:          6,  12      7,  12          6,  14
+        // 14:          7,  14      8,  14          7,  16
+        // 16:          8,  16      10, 16          8,  18
+        // 18:          8,  18      11, 18          9,  21
+        // 20:          9,  20      12, 20          10, 23
+        // 24:          11, 24      14, 24          12, 27
+        // 28:          13, 28      17, 28          14, 32
+        // 36:          17, 36      22, 36          18, 41
+        // FaceName:
+        // Lucida Console
+        // Consolas
+        // Terminal
+        // 新宋体
+
+        SetConsoleOutputCP( face_name == L"新宋体" ? 936 : CP_UTF8 ); // DO NOT use CP_ACP
         CONSOLE_FONT_INFOEX f;
         f.cbSize = sizeof( CONSOLE_FONT_INFOEX );
         f.nFont = 0;
@@ -66,7 +93,12 @@ public:
         f.FontFamily = FF_DONTCARE;
         f.FontWeight = FW_NORMAL;
         wcscpy_s( f.FaceName, face_name.c_str() );
-        SetCurrentConsoleFontEx( std_output, FALSE, &f );
+
+        if ( 0 == SetCurrentConsoleFontEx( output_handle, FALSE, &f ) )
+        {
+            std::cout << "failed: " << GetLastError() << std::endl;
+            return;
+        }
     }
 
     static void disable_close_button()
@@ -79,36 +111,110 @@ public:
         DrawMenuBar( w );
     }
 
-    static void set_color( WORD color )
+    static void set_color( WORD color, HANDLE output_handle = stdoutput() )
     {
-        HANDLE std_output = GetStdHandle( STD_OUTPUT_HANDLE );
         DWORD written = 0;
         COORD coord = { 0, 0 };
         CONSOLE_SCREEN_BUFFER_INFO csbi;
-        GetConsoleScreenBufferInfo( std_output, &csbi );
+        GetConsoleScreenBufferInfo( output_handle, &csbi );
         csbi.wAttributes = color;
-        SetConsoleTextAttribute( std_output, csbi.wAttributes );
-        FillConsoleOutputAttribute( std_output, csbi.wAttributes, csbi.dwSize.X * csbi.dwSize.Y, coord, &written ); 
+        SetConsoleTextAttribute( output_handle, csbi.wAttributes );
+        FillConsoleOutputAttribute( output_handle, csbi.wAttributes, csbi.dwSize.X * csbi.dwSize.Y, coord, &written ); 
     }
 
-    static void set_window( SHORT col, SHORT row )
+    static void set_window( SHORT col, SHORT row, HANDLE output_handle = stdoutput() )
     {
-        HANDLE std_output = GetStdHandle( STD_OUTPUT_HANDLE );
         COORD coord = { 0, 0 };
         COORD size = { col, row };
         CONSOLE_SCREEN_BUFFER_INFO csbi;
-        GetConsoleScreenBufferInfo( std_output, &csbi );
+        GetConsoleScreenBufferInfo( output_handle, &csbi );
 
         // make sure buffer size is bigger window size
         COORD cur_size = { csbi.srWindow.Right - csbi.srWindow.Left + 1, csbi.srWindow.Bottom - csbi.srWindow.Top + 1 };
         COORD tmp_buf_size = { std::max<int>(cur_size.X, col), std::max<int>(cur_size.Y, row) };
-        SetConsoleScreenBufferSize( std_output, tmp_buf_size );
+        SetConsoleScreenBufferSize( output_handle, tmp_buf_size );
 
         SMALL_RECT new_window = csbi.srWindow;
         new_window.Right = new_window.Left + col - 1;
         new_window.Bottom = new_window.Top + row - 1;
-        SetConsoleWindowInfo( std_output, TRUE, &new_window );
+        SetConsoleWindowInfo( output_handle, TRUE, &new_window );
 
-        SetConsoleScreenBufferSize( std_output, size );
+        SetConsoleScreenBufferSize( output_handle, size );
+    }
+
+    static int WINAPI console_ctrl_handler( DWORD  dwCtrlType )
+    {
+        std::cout << static_cast<char>(7) << std::endl;
+
+        switch ( dwCtrlType )
+        {
+        case CTRL_C_EVENT:
+            std::cout << "Ctrl + C" << std::endl;
+            break;
+        case CTRL_BREAK_EVENT:
+            std::cout << "Ctrl + BREAK" << std::endl;
+            break;
+        case CTRL_CLOSE_EVENT:
+            std::cout << "CLOSE EVENT" << std::endl;
+            break;
+        case CTRL_LOGOFF_EVENT:
+            std::cout << "LOGOFF EVENT" << std::endl;
+            break;
+        case CTRL_SHUTDOWN_EVENT:
+            std::cout << "SHUTDOWN EVENT" << std::endl;
+            break;
+        }
+
+        return TRUE;
+    }
+
+    static void set_console_ctrl_handler()
+    {
+        SetConsoleCtrlHandler( console_ctrl_handler, TRUE );
+    }
+
+
+    static void disable_console_mode( DWORD disable_mode )
+    {
+        // must call this before SetConsoleMode
+        HANDLE stdinput = GetStdHandle(STD_INPUT_HANDLE);
+        DWORD mode = 0;
+        GetConsoleMode( stdinput, &mode );
+        mode &= ~disable_mode;
+        SetConsoleMode( stdinput, mode );
+    }
+
+    static void cls( HANDLE output_handle = stdoutput() )
+    {
+        COORD coord = { 0, 0 };
+        CONSOLE_SCREEN_BUFFER_INFOEX csbi;
+        csbi.cbSize = sizeof( CONSOLE_SCREEN_BUFFER_INFOEX );
+        GetConsoleScreenBufferInfoEx( output_handle, &csbi );
+        CHAR_INFO ch;
+        ch.Attributes = csbi.wAttributes;
+        ch.Char.UnicodeChar = L' ';
+        SMALL_RECT wrige_region;
+        WriteConsoleOutput( output_handle, &ch, csbi.dwSize, coord, &wrige_region ); 
     }
 };
+
+
+inline std::ostream& operator <<( std::ostream& os, const COORD& c )
+{
+    return os << "(" << c.X << ", " << c.Y << ")";
+}
+
+inline std::ostream& operator <<( std::ostream& os, const SMALL_RECT& s )
+{
+    return os << "(" << s.Left << ", " << s.Top << ", " << s.Right << ", " << s.Bottom << ")";
+}
+
+inline std::ostream& operator <<( std::ostream& os, const CONSOLE_SCREEN_BUFFER_INFO& c )
+{
+    return os
+        << "dwSize: " << c.dwSize << std::endl
+        << "dwCursorPosition: " << c.dwCursorPosition << std::endl 
+        << "wAttributes: " << c.wAttributes << std::endl 
+        << "srWindow: " << c.srWindow << std::endl 
+        << "dwMaximumWindowSize: " << c.dwMaximumWindowSize;
+}

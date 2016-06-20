@@ -22,7 +22,7 @@ public:
 
 public:
 
-    HANDLE m_std_output_handle;
+    HANDLE m_handle;
     UINT m_cp;
     UINT m_output_cp;
 };

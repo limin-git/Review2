@@ -70,6 +70,22 @@ void Loader::reload()
         return;
     }
 
+    int code_page = 936;
+
+    {
+        // UTF-8: EF BB BF
+        unsigned char ch[3] = { 0 };
+        for ( size_t i = 0; i < 3; ++i ) { is >> ch[i]; }
+        if ( ch[0] == 0xEF && ch[1] == 0xBB && ch[2] == 0xBF )
+        {
+            code_page = CP_UTF8;
+        }
+        else
+        {
+            for ( int i = 3; 0 < i; --i ) { is.putback( ch[i - 1] ); }
+        }
+    }
+
     std::set<size_t> string_hash_set;
     std::map<size_t, std::string> hash_2_string_map;
 
@@ -82,6 +98,12 @@ void Loader::reload()
         if ( s.empty() || '#' == s[0] )
         {
             continue;
+        }
+
+        if ( code_page != CP_UTF8 )
+        {
+            std::wstring ws = Utility::to_wstring( s, code_page );
+            s = Utility::to_string( ws, CP_UTF8 );
         }
 
         size_t hash = m_hash_function( s );

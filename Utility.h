@@ -29,6 +29,9 @@ namespace Utility
     void play_or_tts( const std::pair<std::string, std::string>& word_path );
     void play_or_tts_list( const std::vector< std::pair<std::string, std::string> >& word_path_list );
     void play_or_tts_list_thread( const std::vector< std::pair<std::string, std::string> >& word_path_list );
+    std::wstring to_wstring( const std ::string& s, int code_page );
+    std::string to_string( const std ::wstring& ws, int code_page );
+    void print_utf( const std::string& s );
 
     struct RecordSound
     {

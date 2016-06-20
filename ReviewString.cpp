@@ -5,6 +5,7 @@
 #include "Speech.h"
 #include "Utility.h"
 #include "Log.h"
+#include "ReviewManager.h"
 
 
 ReviewString::ReviewString( size_t hash, Loader* loader, History* history, Speech* play, const std::string& display_format )
@@ -66,52 +67,9 @@ std::string ReviewString::review()
 
             if ( ( ch == ',' ) && should_wait )
             {
-                std::string c;
-                //std::getline( std::cin, c );
-                //c.erase( std::remove_if( c.begin(), c.end(), boost::is_any_of("\\[]+-") ), c.end() );
-                int ch = _getch();
+                std::string c = ReviewManager::wait_for_input();
 
-                if ( 0 == ch )
-                {
-                    _getch();
-                }
-                else if ( 8 == ch ) // backspace
-                {
-                    ch = 'd';
-                }
-                else if ( 224 == ch )
-                {
-                    ch = _getch();
-
-                    if ( 'K' == ch || 'H' == ch ) // arrow left/up previous
-                    {
-                        std::cout << "arrow left/up";
-                        ch = 'p';
-                    }
-                    else if ( 'S' == ch ) // delete
-                    {
-                        ch = 'd';
-                        std::cout << "delete";
-                    }
-                    else
-                    {
-                        ch = 0;
-                    }
-                }
-
-                std::cout << std::endl;
-
-                static const std::string cmd = "pbsldgq";
-
-                if ( ch )
-                {
-                    if ( cmd.find_first_of( (char)ch ) != std::string::npos )
-                    {
-                        c.append( 1, static_cast<char>(ch) );
-                    }
-                }
-
-                if ( ! c.empty() )
+                if ( c != "next" )
                 {
                     system( "CLS" );
                     return c;
@@ -134,7 +92,9 @@ std::string ReviewString::review()
                     std::cout << "\n";
                 }
 
-                std::cout << "\t" << content << std::flush;
+                std::cout << "\t";
+                Utility::print_utf( content );
+                std::cout << std::flush;
                 should_wait = true;
                 should_new_line = true;
             }
