@@ -32,6 +32,8 @@ namespace Utility
     std::wstring to_wstring( const std ::string& s, int code_page );
     std::string to_string( const std ::wstring& ws, int code_page );
     void print_utf( const std::string& s );
+    time_list times_from_strings( const std::vector<std::string>& strings );
+    std::vector<std::string> split_string( const std::string& s, const std::string& separator = ",:;/%~-\t|" );
 
     struct RecordSound
     {

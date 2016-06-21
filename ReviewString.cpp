@@ -6,6 +6,7 @@
 #include "Utility.h"
 #include "Log.h"
 #include "ReviewManager.h"
+#include "Console.h"
 
 
 ReviewString::ReviewString( size_t hash, Loader* loader, History* history, Speech* play, const std::string& display_format )
@@ -60,6 +61,8 @@ std::string ReviewString::review()
     {
         bool should_wait = false;
         bool should_new_line = false;
+        bool is_first = true;
+        std::string first_content;
 
         for ( size_t i = 0; i < m_display_format.size(); ++i )
         {
@@ -88,13 +91,34 @@ std::string ReviewString::review()
                     continue;
                 }
 
+                if ( ! first_content.empty() )
+                {
+                    system( "cls" );
+                    std::cout << "\t";
+                    Utility::print_utf( first_content );
+                    std::cout << std::endl;
+                    first_content.clear();
+                }
+
                 if ( should_new_line )
                 {
                     std::cout << "\n";
                 }
 
                 std::cout << "\t";
-                Utility::print_utf( content );
+                //Utility::print_utf( content );
+
+                if ( is_first )
+                {
+                    is_first = false;
+                    first_content = content;
+                    Console::write_center( content );
+                }
+                else
+                {
+                    Utility::print_utf( content );
+                }
+
                 std::cout << std::flush;
                 should_wait = true;
                 should_new_line = true;

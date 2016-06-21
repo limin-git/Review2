@@ -63,6 +63,7 @@ void ReviewManager::review()
 
     m_history->initialize();
     m_history->synchronize_history( m_loader->get_string_hash_set() );
+    set_title();
     update();
     new boost::thread( boost::bind( &ReviewManager::update_thread, this ) );
 
@@ -248,21 +249,21 @@ ReviewString ReviewManager::get_previous()
 
 std::string ReviewManager::wait_for_input()
 {
-    static HANDLE stdinput = GetStdHandle(STD_INPUT_HANDLE); 
-    static INPUT_RECORD input_buffer[128]; 
+    static HANDLE stdinput = GetStdHandle(STD_INPUT_HANDLE);
+    static INPUT_RECORD input_buffer[128];
     static DWORD num_read = 0;
 
     Console::disable_console_mode( ENABLE_QUICK_EDIT_MODE  );
     SetConsoleMode( stdinput, ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT );
 
-    while ( true ) 
+    while ( true )
     {
         ReadConsoleInput( stdinput, input_buffer, 128, &num_read );
 
-        for ( size_t i = 0; i < num_read; i++) 
+        for ( size_t i = 0; i < num_read; i++)
         {
-            switch( input_buffer[i].EventType ) 
-            { 
+            switch( input_buffer[i].EventType )
+            {
             case KEY_EVENT:
                 {
                     KEY_EVENT_RECORD& e = input_buffer[i].Event.KeyEvent;
@@ -312,7 +313,7 @@ std::string ReviewManager::wait_for_input()
                     }
                     break;
                 }
-            } 
+            }
         }
     }
 
@@ -323,8 +324,6 @@ std::string ReviewManager::wait_for_input()
 void ReviewManager::set_title()
 {
     std::stringstream strm;
-    //strm << "TITLE " << m_file_name << " - " << m_reviewing_set.size();
-    //system( strm.str().c_str() );
     strm << m_file_name << " - " << m_reviewing_set.size();
     SetConsoleTitle( strm.str().c_str() );
 }

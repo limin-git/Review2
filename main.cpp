@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
         ( file_history_option, boost::program_options::value<std::string>(),  ".history" )
         ( file_review_option, boost::program_options::value<std::string>(),  ".review, history cache" )
         ( config_option, boost::program_options::value<std::string>()->default_value( "review.cfg" ),  "config file" )
-        ( review_schedule, boost::program_options::value<std::string>()->multitoken(),  "review schedule (time span list)" )
+        ( review_schedule, boost::program_options::value<std::string>(), "review schedule (time span list)" )
         ( review_minimal_time_option, boost::program_options::value<boost::timer::nanosecond_type>()->default_value( 500 ),  "in miniseconds" )
         ( review_max_cache_size_option, boost::program_options::value<size_t>()->default_value( 100 ),  "normally write to .review, write to .history every max-cache-size times" )
         ( review_auto_update_interval_option, boost::program_options::value<size_t>()->default_value( 60 ),  "in seconds" )
@@ -63,6 +63,7 @@ int main(int argc, char* argv[])
     if ( ::CreateMutex( NULL, FALSE, file.c_str() ) == NULL || GetLastError() == ERROR_ALREADY_EXISTS )
     {
         std::cout << "another instance is running." << std::endl;
+        system( "pause" );
         return 0;
     }
 

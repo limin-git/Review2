@@ -22,6 +22,7 @@ public:
 
 public:
 
+    HANDLE m_stdoutput;
     HANDLE m_handle;
     UINT m_cp;
     UINT m_output_cp;

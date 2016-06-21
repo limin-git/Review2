@@ -15,61 +15,28 @@ History::History()
     const boost::program_options::variables_map& vm = ProgramOptions::get_vm();
 
     {
-        std::stringstream strm;
-        boost::chrono::seconds s;
-        std::vector<std::string> string_list;
+        std::string schedule;
 
         if ( vm.count( review_schedule ) )
         {
-            std::string schedule = vm[review_schedule].as<std::string>();
-            //string_list = 
-
-            typedef boost::tokenizer< boost::char_separator<char> > tokenizer;
-            boost::char_separator<char> sep( ";,:\t" );
-            tokenizer tokens( schedule, sep );
-
-            for ( tokenizer::iterator it = tokens.begin(); it != tokens.end(); ++it )
-            {
-                string_list.push_back( *it );
-            }
+            schedule = vm[review_schedule].as<std::string>();
         }
-        else
+
+        if ( schedule.empty() )
         {
-            const char* s[] =
-            {
-                "0 seconds",
-                //"0 seconds",    "7 minutes",    "30 minutes",   "30 minutes",   "1 hours",      "3 hours",      "5 hours",
-                //"7 hours",      "9 hours",      "11 hours",     "13 hours",     "15 hours",     "17 hours",     "19 hours",
-                "24 hours",     "48 hours",     "72 hours",     "96 hours",     "120 hours",    "144 hours",    "168 hours"
-                //"192 hours",    "216 hours",    "240 hours",    "264 hours",    "288 hours",    "312 hours",    "336 hours",
-                //"360 hours",    "384 hours",    "408 hours",    "432 hours",    "456 hours",    "480 hours",    "504 hours",
-                //"528 hours",    "552 hours",    "576 hours",    "600 hours",    "624 hours",    "648 hours",    "672 hours",
-                //"696 hours",    "720 hours",    "744 hours",    "768 hours",    "792 hours",    "816 hours",    "840 hours"
-            };
-
-            string_list.assign( s, s + sizeof(s) / sizeof(char*) );
+            schedule = "0 hours, 24 hours, 48 hours, 72 hours, 96 hours, 120 hours, 144 hours, 168 hours";
+            //"0 seconds",    "7 minutes",    "30 minutes",   "30 minutes",   "1 hours",      "3 hours",      "5 hours",
+            //"7 hours",      "9 hours",      "11 hours",     "13 hours",     "15 hours",     "17 hours",     "19 hours",
+            //"24 hours",     "48 hours",     "72 hours",     "96 hours",     "120 hours",    "144 hours",    "168 hours"
+            //"192 hours",    "216 hours",    "240 hours",    "264 hours",    "288 hours",    "312 hours",    "336 hours",
+            //"360 hours",    "384 hours",    "408 hours",    "432 hours",    "456 hours",    "480 hours",    "504 hours",
+            //"528 hours",    "552 hours",    "576 hours",    "600 hours",    "624 hours",    "648 hours",    "672 hours",
+            //"696 hours",    "720 hours",    "744 hours",    "768 hours",    "792 hours",    "816 hours",    "840 hours"
         }
 
-        for ( size_t i = 0; i < string_list.size(); ++i )
-        {
-            strm.clear();
-            strm.str( string_list[i] );
-            strm >> s;
-
-            if ( strm.fail() )
-            {
-                std::cout << "wrong schedule: " << string_list[i] << std::endl;
-                LOG_ERROR << "wrong schedule: " << string_list[i];
-                exit( 0 );
-            }
-
-            m_review_spans.push_back( s.count() );
-        }
-
-        strm.clear();
-        strm.str("");
-        std::copy( string_list.begin(), string_list.end(), std::ostream_iterator<std::string>( strm, ", " ) );
-        LOG_TRACE << "review-time-span(" << string_list.size() << "): " << strm.str();
+        std::vector<std::string> strings = Utility::split_string( schedule );
+        m_schedule = Utility::times_from_strings( strings );
+        LOG_TRACE << "review.schedule(" << strings.size() << "): " << schedule;
     }
 
     ProgramOptions::connect_to_signal( boost::bind( &History::update_option, this, _1 ) );
@@ -234,7 +201,7 @@ void History::merge_history( const history_type& history )
                 break;
             }
 
-            if ( last_time + m_review_spans[round] < times[i] )
+            if ( last_time + m_schedule[round] < times[i] )
             {
                 history_times.push_back( times[i] );
                 last_time = times[i];
@@ -251,7 +218,7 @@ void History::merge_history( const history_type& history )
                     << " round = " << round
                     << " last-review-time = " << last_time
                     << " elapsed = " << Utility::time_duration_string( times[i] - last_time )
-                    << " span = " << Utility::time_duration_string( m_review_spans[round] )
+                    << " span = " << Utility::time_duration_string( m_schedule[round] )
                     ;
             }
         }
@@ -305,7 +272,7 @@ bool History::is_expired( size_t hash, const std::time_t& current_time )
         return true;
     }
 
-    if ( m_review_spans.size() == review_round )
+    if ( m_schedule.size() == review_round )
     {
         return false;
     }
@@ -317,7 +284,7 @@ bool History::is_expired( size_t hash, const std::time_t& current_time )
         return false;
     }
 
-    std::time_t span = m_review_spans[review_round];
+    std::time_t span = m_schedule[review_round];
 
     if ( ! ( last_review_time + span < current_time ) )
     {

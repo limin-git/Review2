@@ -41,6 +41,6 @@ public:
     std::ofstream m_review_stream;
     size_t m_max_cache_size;
     size_t m_cache_size;
-    time_list m_review_spans;
+    time_list m_schedule;
     volatile size_t m_once_per_days;
 };

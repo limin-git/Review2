@@ -333,4 +333,47 @@ namespace Utility
         WriteConsoleW( std_output, ws.c_str(), ws.size(), 0, 0 );
     }
 
+
+    time_list times_from_strings( const std::vector<std::string>& strings )
+    {
+        time_list times;
+        boost::chrono::seconds s;
+        std::stringstream strm;
+
+        for ( size_t i = 0; i < strings.size(); ++i )
+        {
+            strm.clear();
+            strm.str( strings[i] );
+            strm >> s;
+
+            if ( strm.fail() )
+            {
+                LOG_ERROR << "wrong time format: " << strings[i];
+                std::cout << "wrong time format: " << strings[i] << std::endl;
+                system( "pause" );
+                exit( 0 );
+            }
+
+            times.push_back( s.count() );
+        }
+
+        return times;
+    }
+
+
+    std::vector<std::string> split_string( const std::string& s, const std::string& separator )
+    {
+        std::vector<std::string> strings;
+        typedef boost::tokenizer< boost::char_separator<char> > tokenizer;
+        boost::char_separator<char> sep( separator.c_str() );
+        tokenizer tokens( s, sep );
+
+        for ( tokenizer::iterator it = tokens.begin(); it != tokens.end(); ++it )
+        {
+            strings.push_back( *it );
+        }
+
+        return strings;
+    }
+
 }

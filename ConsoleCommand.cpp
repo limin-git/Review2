@@ -8,13 +8,14 @@
 
 ConsoleCommand::ConsoleCommand()
 {
+    m_stdoutput = GetStdHandle( STD_OUTPUT_HANDLE );
+    //m_handle = CreateConsoleScreenBuffer( GENERIC_READ | GENERIC_WRITE, 0, 0, CONSOLE_TEXTMODE_BUFFER, 0 );
     m_handle = GetStdHandle( STD_OUTPUT_HANDLE );
     m_cp = GetConsoleCP();
     m_output_cp = GetConsoleOutputCP();
 
     show_cursor( false );
     disable_close_button();
-    Console::set_console_ctrl_handler();
 
     ProgramOptions::connect_to_signal( boost::bind( &ConsoleCommand::update_option, this, _1 ) );
 }
@@ -24,6 +25,7 @@ ConsoleCommand::~ConsoleCommand()
 {
     SetConsoleCP( m_cp );
     SetConsoleOutputCP( m_output_cp );
+    //CloseHandle( m_handle );
 }
 
 
@@ -184,7 +186,7 @@ void ConsoleCommand::set_console_color( WORD color )
     GetConsoleScreenBufferInfo( m_handle, &csbi );
     csbi.wAttributes = color;
     SetConsoleTextAttribute( m_handle, csbi.wAttributes );
-    FillConsoleOutputAttribute( m_handle, csbi.wAttributes, csbi.dwSize.X * csbi.dwSize.Y, coord, &written ); 
+    FillConsoleOutputAttribute( m_handle, csbi.wAttributes, csbi.dwSize.X * csbi.dwSize.Y, coord, &written );
 }
 
 
@@ -202,7 +204,7 @@ void ConsoleCommand::show_cursor( BOOL visible )
 
 
 void ConsoleCommand::disable_close_button()
-{   
+{
     HWND w = GetConsoleWindow();
     HMENU m = GetSystemMenu( w, FALSE );
     DeleteMenu( m, SC_CLOSE , MF_BYCOMMAND );
