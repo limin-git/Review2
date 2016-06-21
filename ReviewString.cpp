@@ -6,7 +6,6 @@
 #include "Utility.h"
 #include "Log.h"
 #include "ReviewManager.h"
-#include "Console.h"
 
 
 ReviewString::ReviewString( size_t hash, Loader* loader, History* history, Speech* play, const std::string& display_format )
@@ -18,7 +17,7 @@ ReviewString::ReviewString( size_t hash, Loader* loader, History* history, Speec
 {
     if ( m_hash && m_loader && m_speech )
     {
-        m_speech_words = Utility::extract_words( m_loader->get_string( m_hash ) );
+        m_speech_words = Utility::extract_strings_in_braces( m_loader->get_string( m_hash ) );
     }
 
     if ( m_hash && m_loader )
@@ -95,7 +94,7 @@ std::string ReviewString::review()
                 {
                     system( "cls" );
                     std::cout << "\t";
-                    Utility::print_utf( first_content );
+                    Utility::write_console( first_content );
                     std::cout << std::endl;
                     first_content.clear();
                 }
@@ -106,17 +105,17 @@ std::string ReviewString::review()
                 }
 
                 std::cout << "\t";
-                //Utility::print_utf( content );
+                //Utility::write_console( content );
 
                 if ( is_first )
                 {
                     is_first = false;
                     first_content = content;
-                    Console::write_center( content );
+                    Utility::write_console_on_center( content );
                 }
                 else
                 {
-                    Utility::print_utf( content );
+                    Utility::write_console( content );
                 }
 
                 std::cout << std::flush;
@@ -131,7 +130,7 @@ std::string ReviewString::review()
         LOG_DEBUG
             << m_string << std::endl
             << "(round: " << m_history->get_review_round( m_hash ) << ") "
-            << Utility::get_time_list_string( m_history->get_times( m_hash ) );
+            << Utility::duration_string_from_time_list( m_history->get_times( m_hash ) );
     }
 
     return "next";

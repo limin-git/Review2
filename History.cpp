@@ -71,7 +71,7 @@ void History::initialize()
         write_history();
     }
 
-    LOG_TRACE << "history is updated.\n" << Utility::get_history_string( m_history );
+    LOG_TRACE << "history is updated.\n" << string_from_history( m_history );
 }
 
 
@@ -172,7 +172,7 @@ history_type History::load_history_from_file( const std::string& file )
         }
     }
 
-    LOG_TRACE << file << std::endl << Utility::get_history_string( history );
+    LOG_TRACE << file << std::endl << string_from_history( history );
     return history;
 }
 
@@ -214,11 +214,11 @@ void History::merge_history( const history_type& history )
             else
             {
                 LOG_DEBUG
-                    << " ignore review time: " << Utility::time_string( times[i] )
+                    << " ignore review time: " << Utility::string_from_time_t( times[i] )
                     << " round = " << round
                     << " last-review-time = " << last_time
-                    << " elapsed = " << Utility::time_duration_string( times[i] - last_time )
-                    << " span = " << Utility::time_duration_string( m_schedule[round] )
+                    << " elapsed = " << Utility::duration_string_from_seconds( times[i] - last_time )
+                    << " span = " << Utility::duration_string_from_seconds( m_schedule[round] )
                     ;
             }
         }
@@ -234,7 +234,7 @@ void History::synchronize_history( const std::set<size_t>& hashes )
     {
         if ( hashes.find( it->first ) == hashes.end() )
         {
-            LOG_DEBUG << "erase: " << it->first << " " << Utility::get_time_list_string( it->second );
+            LOG_DEBUG << "erase: " << it->first << " " << Utility::duration_string_from_time_list( it->second );
             m_history.erase( it++ );
             history_changed = true;
         }
@@ -381,4 +381,34 @@ void History::update_option( const boost::program_options::variables_map& vm )
         LOG_DEBUG << "review-once-per-days: " << m_once_per_days;
         m_once_per_days *= 3600 * 24;
     }
+}
+
+
+std::string History::string_from_history( const history_type& history )
+{
+    std::stringstream os;
+
+    for ( history_type::const_iterator it = history.begin(); it != history.end(); ++it )
+    {
+        size_t hash = it->first;
+        const time_list& times = it->second;
+        os << hash;
+
+        if ( times.empty() )
+        {
+            os << std::endl;
+            continue;
+        }
+
+        os << " " << Utility::string_from_time_t( times[0] );
+
+        if ( 1 < times.size() )
+        {
+            os << Utility::duration_string_from_time_list( times );
+        }
+
+        os << std::endl;
+    }
+
+    return os.str();
 }

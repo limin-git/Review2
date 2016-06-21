@@ -9,7 +9,6 @@
 #include "OptionString.h"
 #include "ProgramOptions.h"
 #include "OptionUpdateHelper.h"
-#include "Console.h"
 
 
 struct Order
@@ -142,7 +141,7 @@ void ReviewManager::review()
 
                 for ( std::list<ReviewString>::iterator it = m_play_back_string.begin(); it != m_play_back_string.end(); ++it )
                 {
-                    std::vector<std::string> w2 = Utility::extract_words( it->get_string() );
+                    std::vector<std::string> w2 = Utility::extract_strings_in_braces( it->get_string() );
                     w.insert( w.end(), w2.begin(), w2.end() );
                 }
 
@@ -253,7 +252,7 @@ std::string ReviewManager::wait_for_input()
     static INPUT_RECORD input_buffer[128];
     static DWORD num_read = 0;
 
-    Console::disable_console_mode( ENABLE_QUICK_EDIT_MODE  );
+    Utility::disable_console_mode( ENABLE_QUICK_EDIT_MODE  );
     SetConsoleMode( stdinput, ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT );
 
     while ( true )
@@ -417,7 +416,7 @@ std::ostream& ReviewManager::output_hash_list( std::ostream& os, const std::list
 
         os
             << r << "\t"
-            << Utility::time_string( t ) << "\t"
+            << Utility::string_from_time_t( t ) << "\t"
             << s.size() << "\t"
             << s << "\n";
             ;
@@ -449,7 +448,7 @@ std::string ReviewManager::get_new_expired_string( const std::set<size_t>& os,  
         std::time_t last_review = m_history->get_last_review_time( hash );
         std::time_t elapsed = std::time(0) - last_review;
         const std::string& s = m_loader->get_string( *it );
-        strm << std::endl << "expired: " << round << " (" << Utility::time_duration_string(elapsed) << ") " << s;
+        strm << std::endl << "expired: " << round << " (" << Utility::duration_string_from_seconds(elapsed) << ") " << s;
     }
 
     return strm.str();
@@ -485,7 +484,7 @@ void ReviewManager::listen_thread()
     {
         size_t hash = get_next_hash( m_listening_list, get_next_order( listen_orders, listen_orders_it ) );
         const std::string& s = m_loader->get_string( hash );
-        std::vector<std::string> words = Utility::extract_words( s );
+        std::vector<std::string> words = Utility::extract_strings_in_braces( s );
 
         if ( words.empty() )
         {

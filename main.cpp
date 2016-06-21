@@ -4,7 +4,7 @@
 #include "OptionString.h"
 #include "ProgramOptions.h"
 #include "ConsoleCommand.h"
-#include "Console.h"
+#include "Utility.h"
 
 
 int main(int argc, char* argv[])
@@ -80,11 +80,11 @@ int main(int argc, char* argv[])
             return 0;
         }
 
-        //Console::show_cursor( false );
-        //Console::set_font( 20, L"新宋体" );
-        //Console::set_window( 80, 8 );
-        //Console::disable_close_button();
-        //Console::set_color( BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE );
+        //Console::show_console_cursor( false );
+        //Console::set_console_font( 20, L"新宋体" );
+        //Console::set_console_window_size( 80, 8 );
+        //Console::disable_console_system_buttons();
+        //Console::set_console_color( BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE );
         rm.review();
     }
     catch ( boost::filesystem::filesystem_error& e )

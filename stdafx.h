@@ -7,8 +7,8 @@
 
 #include "targetver.h"
 
-//#include <stdio.h>
-//#include <tchar.h>
+#include <stdio.h>
+#include <tchar.h>
 
 
 
@@ -17,6 +17,8 @@
 #include <MMSystem.h>
 #pragma  comment( lib, "winmm.lib" )
 #pragma  comment( lib, "Psapi.lib" )
+#include <dshow.h>
+#pragma comment(lib, "strmiids.lib") // For IID_IGraphBuilder, IID_IMediaControl, IID_IMediaEvent
 #include <atlbase.h>
 #include <atlcom.h>
 #include <sapi.h>

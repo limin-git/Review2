@@ -60,7 +60,7 @@ void Loader::reload()
         return;
     }
 
-    LOG_DEBUG << "last-writ-time: " << Utility::time_string( m_last_write_time ) << ", new last-write-time: " << Utility::time_string( t );
+    LOG_DEBUG << "last-writ-time: " << Utility::string_from_time_t( m_last_write_time ) << ", new last-write-time: " << Utility::string_from_time_t( t );
 
     std::ifstream is( m_file_name.c_str() );
 

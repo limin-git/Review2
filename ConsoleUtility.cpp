@@ -1,23 +1,26 @@
-#pragma once
+#include "stdafx.h"
+#include "ConsoleUtility.h"
+#include "UnicodeUtility.h"
 
 
-class Console
+namespace Utility
 {
-public:
 
-    static HANDLE stdoutput()
+    HANDLE cout()
     {
-        static HANDLE output = GetStdHandle( STD_OUTPUT_HANDLE );
+        HANDLE output = GetStdHandle( STD_OUTPUT_HANDLE );
         return output;
     }
 
-    static HANDLE stdinput()
+
+    HANDLE cin()
     {
-        static HANDLE input = GetStdHandle( STD_INPUT_HANDLE );
+        HANDLE input = GetStdHandle( STD_INPUT_HANDLE );
         return input;
     }
 
-    static void show_cursor( BOOL visible = true, HANDLE output_handle = stdoutput() )
+
+    void show_console_cursor( BOOL visible, HANDLE output_handle )
     {
         CONSOLE_CURSOR_INFO cursor_info;
         GetConsoleCursorInfo( output_handle, &cursor_info );
@@ -29,50 +32,19 @@ public:
         }
     }
 
-    static std::wstring to_wstring( const std ::string& s, int code_page )
-    {
-        static wchar_t buffer[ 1024 * 1024];
-        MultiByteToWideChar( code_page , 0, s. c_str(), - 1, buffer , 1024 * 1024 );
-        return std ::wstring( buffer );
-    }
 
-    static std::string to_string( const std ::wstring& ws, int code_page )
-    {
-        static char buffer[ 1024 * 1024];
-        WideCharToMultiByte( code_page , 0, ws. c_str(), - 1, buffer , 1024 * 1024, 0, 0 );
-        return std ::string( buffer );
-    }
-
-    static void fix_utf8_output( HANDLE output_handle = stdoutput() )
+    void refresh_console_window( HANDLE output_handle )
     {
         CONSOLE_SCREEN_BUFFER_INFO csbinfo;
         GetConsoleScreenBufferInfo( output_handle, &csbinfo );
         COORD coord = { 0, 0 };
-        CHAR_INFO chiFill;
-        chiFill.Char.UnicodeChar = L' ';
-        ScrollConsoleScreenBuffer( output_handle, &csbinfo.srWindow, NULL, coord, &chiFill  );
+        CHAR_INFO char_fill;
+        char_fill.Char.UnicodeChar = L' ';
+        ScrollConsoleScreenBuffer( output_handle, &csbinfo.srWindow, NULL, coord, &char_fill  );
     }
 
-    static void print_font_info( HANDLE output_handle = stdoutput() )
-    {
-        CONSOLE_FONT_INFOEX f;
-        f.cbSize = sizeof( CONSOLE_FONT_INFOEX );
 
-        if ( 0 == GetCurrentConsoleFontEx( output_handle, TRUE, &f ) )
-        {
-            std::cout << "failed: " << GetLastError() << std::endl;
-            return;
-        }
-
-        std::wcout
-            << L"nFont     : " << f.nFont << std::endl
-            << L"dwFontSize: " << f.dwFontSize.X << L"," << f.dwFontSize.Y << std::endl
-            << L"FontFamily: " << f.FontFamily << std::endl
-            << L"FontWeight: " << f.FontWeight << std::endl
-            << L"FaceName  : " << f.FaceName << std::endl;
-    }
-
-    static void set_font( SHORT font_size = 14, const std::wstring& face_name = L"Consolas", HANDLE output_handle = stdoutput() )
+    void set_console_font( SHORT font_size, const std::wstring& face_name, HANDLE output_handle )
     {
         // nFont: (no use)
         // 14 Console
@@ -111,7 +83,8 @@ public:
         }
     }
 
-    static void disable_close_button()
+
+    void disable_console_system_buttons()
     {   
         HWND w = GetConsoleWindow();
         HMENU m = GetSystemMenu( w, FALSE );
@@ -121,7 +94,8 @@ public:
         DrawMenuBar( w );
     }
 
-    static void set_color( WORD color, HANDLE output_handle = stdoutput() )
+
+    void set_console_color( WORD color, HANDLE output_handle )
     {
         DWORD written = 0;
         COORD coord = { 0, 0 };
@@ -132,7 +106,8 @@ public:
         FillConsoleOutputAttribute( output_handle, csbi.wAttributes, csbi.dwSize.X * csbi.dwSize.Y, coord, &written ); 
     }
 
-    static void set_window( SHORT col, SHORT row, HANDLE output_handle = stdoutput() )
+
+    void set_console_window_size( SHORT col, SHORT row, HANDLE output_handle )
     {
         COORD coord = { 0, 0 };
         COORD size = { col, row };
@@ -152,7 +127,8 @@ public:
         SetConsoleScreenBufferSize( output_handle, size );
     }
 
-    static int WINAPI console_ctrl_handler( DWORD  dwCtrlType )
+
+    int WINAPI console_ctrl_handler( DWORD  dwCtrlType )
     {
         std::cout << static_cast<char>(7) << std::endl;
 
@@ -178,22 +154,24 @@ public:
         return TRUE;
     }
 
-    static void set_console_ctrl_handler()
+
+    void set_console_ctrl_handler()
     {
         SetConsoleCtrlHandler( console_ctrl_handler, TRUE );
     }
 
 
-    static void disable_console_mode( DWORD disable_mode, HANDLE handle = GetStdHandle(STD_INPUT_HANDLE) )
+    void disable_console_mode( DWORD disable_mode, HANDLE handle )
     {
-        // must call this before SetConsoleMode
+        // MUST call this before SetConsoleMode
         DWORD mode = 0;
         GetConsoleMode( handle, &mode );
         mode &= ~disable_mode;
         SetConsoleMode( handle, mode );
     }
 
-    static void cls( HANDLE output_handle = stdoutput() )
+
+    void cls( HANDLE output_handle )
     {
         COORD coord = { 0, 0 };
         CONSOLE_SCREEN_BUFFER_INFOEX csbi;
@@ -212,7 +190,8 @@ public:
         buf = NULL;
     }
 
-    static void cls2( HANDLE output_handle = stdoutput() )
+
+    void cls2( HANDLE output_handle )
     {
         DWORD written = 0;
         COORD coord = { 0, 0 };
@@ -227,7 +206,21 @@ public:
         WriteConsoleOutputCharacterW( output_handle, buf, buf_size, coord, &written );
     }
 
-    static void write_center( const std::string& s, HANDLE output = GetStdHandle( STD_OUTPUT_HANDLE ) )
+
+    void write_console( const std::string& s, int code_page, HANDLE output_handle )
+    {
+        std::wstring ws = to_wstring( s, code_page );
+        WriteConsoleW( output_handle, ws.c_str(), ws.size(), 0, 0 );
+    }
+
+
+    void write_console( const std::wstring& ws, HANDLE output_handle )
+    {
+        WriteConsoleW( output_handle, ws.c_str(), ws.size(), 0, 0 );
+    }
+
+
+    void write_console_on_center( const std::string& s, HANDLE output )
     {
         std::wstring ws = to_wstring( s, CP_UTF8 );
         std::string as = to_string( ws, 936 );
@@ -248,25 +241,15 @@ public:
         WriteConsoleOutputCharacterW( output, ws.c_str(), ws.size(), coord, &written );
     }
 
-};
 
+    std::wostream& print_font_info( std::wostream& os, const CONSOLE_FONT_INFOEX& i )
+    {
+        return os
+            << L"nFont     : " << i.nFont << std::endl
+            << L"dwFontSize: " << i.dwFontSize.X << L"," << i.dwFontSize.Y << std::endl
+            << L"FontFamily: " << i.FontFamily << std::endl
+            << L"FontWeight: " << i.FontWeight << std::endl
+            << L"FaceName  : " << i.FaceName << std::endl;
+    }
 
-inline std::ostream& operator <<( std::ostream& os, const COORD& c )
-{
-    return os << "(" << c.X << ", " << c.Y << ")";
-}
-
-inline std::ostream& operator <<( std::ostream& os, const SMALL_RECT& s )
-{
-    return os << "(" << s.Left << ", " << s.Top << ", " << s.Right << ", " << s.Bottom << ")";
-}
-
-inline std::ostream& operator <<( std::ostream& os, const CONSOLE_SCREEN_BUFFER_INFO& c )
-{
-    return os
-        << "dwSize: " << c.dwSize << std::endl
-        << "dwCursorPosition: " << c.dwCursorPosition << std::endl 
-        << "wAttributes: " << c.wAttributes << std::endl 
-        << "srWindow: " << c.srWindow << std::endl 
-        << "dwMaximumWindowSize: " << c.dwMaximumWindowSize;
 }

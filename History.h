@@ -35,6 +35,10 @@ public:
 
 public:
 
+    std::string string_from_history( const history_type& history );
+
+public:
+
     std::string m_file_name;
     std::string m_review_name;
     history_type m_history;
