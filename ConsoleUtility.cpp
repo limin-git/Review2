@@ -6,45 +6,31 @@
 namespace Utility
 {
 
-    HANDLE cout()
-    {
-        HANDLE output = GetStdHandle( STD_OUTPUT_HANDLE );
-        return output;
-    }
-
-
-    HANDLE cin()
-    {
-        HANDLE input = GetStdHandle( STD_INPUT_HANDLE );
-        return input;
-    }
-
-
-    void show_console_cursor( BOOL visible, HANDLE output_handle )
+    void show_console_cursor( BOOL visible, HANDLE handle )
     {
         CONSOLE_CURSOR_INFO cursor_info;
-        GetConsoleCursorInfo( output_handle, &cursor_info );
+        GetConsoleCursorInfo( handle, &cursor_info );
 
         if ( visible != cursor_info.bVisible )
         {
             cursor_info.bVisible = visible;
-            SetConsoleCursorInfo( output_handle, &cursor_info );
+            SetConsoleCursorInfo( handle, &cursor_info );
         }
     }
 
 
-    void refresh_console_window( HANDLE output_handle )
+    void refresh_console_window( HANDLE handle )
     {
         CONSOLE_SCREEN_BUFFER_INFO csbinfo;
-        GetConsoleScreenBufferInfo( output_handle, &csbinfo );
+        GetConsoleScreenBufferInfo( handle, &csbinfo );
         COORD coord = { 0, 0 };
         CHAR_INFO char_fill;
         char_fill.Char.UnicodeChar = L' ';
-        ScrollConsoleScreenBuffer( output_handle, &csbinfo.srWindow, NULL, coord, &char_fill  );
+        ScrollConsoleScreenBuffer( handle, &csbinfo.srWindow, NULL, coord, &char_fill  );
     }
 
 
-    void set_console_font( SHORT font_size, const std::wstring& face_name, HANDLE output_handle )
+    void set_console_font( SHORT font_size, const std::wstring& face_name, HANDLE handle )
     {
         // nFont: (no use)
         // 14 Console
@@ -76,7 +62,7 @@ namespace Utility
         f.FontWeight = FW_NORMAL;
         wcscpy_s( f.FaceName, face_name.c_str() );
 
-        if ( 0 == SetCurrentConsoleFontEx( output_handle, FALSE, &f ) )
+        if ( 0 == SetCurrentConsoleFontEx( handle, FALSE, &f ) )
         {
             std::cout << "failed: " << GetLastError() << std::endl;
             return;
@@ -95,44 +81,44 @@ namespace Utility
     }
 
 
-    void set_console_color( WORD color, HANDLE output_handle )
+    void set_console_color( WORD color, HANDLE handle )
     {
         DWORD written = 0;
         COORD coord = { 0, 0 };
         CONSOLE_SCREEN_BUFFER_INFO csbi;
-        GetConsoleScreenBufferInfo( output_handle, &csbi );
+        GetConsoleScreenBufferInfo( handle, &csbi );
         csbi.wAttributes = color;
-        SetConsoleTextAttribute( output_handle, csbi.wAttributes );
-        FillConsoleOutputAttribute( output_handle, csbi.wAttributes, csbi.dwSize.X * csbi.dwSize.Y, coord, &written ); 
+        SetConsoleTextAttribute( handle, csbi.wAttributes );
+        FillConsoleOutputAttribute( handle, csbi.wAttributes, csbi.dwSize.X * csbi.dwSize.Y, coord, &written ); 
     }
 
 
-    void set_console_window_size( SHORT col, SHORT row, HANDLE output_handle )
+    void set_console_window_size( SHORT col, SHORT row, HANDLE handle )
     {
         COORD coord = { 0, 0 };
         COORD size = { col, row };
         CONSOLE_SCREEN_BUFFER_INFO csbi;
-        GetConsoleScreenBufferInfo( output_handle, &csbi );
+        GetConsoleScreenBufferInfo( handle, &csbi );
 
         // make sure buffer size is bigger window size
         COORD cur_size = { csbi.srWindow.Right - csbi.srWindow.Left + 1, csbi.srWindow.Bottom - csbi.srWindow.Top + 1 };
         COORD tmp_buf_size = { std::max<int>(cur_size.X, col), std::max<int>(cur_size.Y, row) };
-        SetConsoleScreenBufferSize( output_handle, tmp_buf_size );
+        SetConsoleScreenBufferSize( handle, tmp_buf_size );
 
         SMALL_RECT new_window = csbi.srWindow;
         new_window.Right = new_window.Left + col - 1;
         new_window.Bottom = new_window.Top + row - 1;
-        SetConsoleWindowInfo( output_handle, TRUE, &new_window );
+        SetConsoleWindowInfo( handle, TRUE, &new_window );
 
-        SetConsoleScreenBufferSize( output_handle, size );
+        SetConsoleScreenBufferSize( handle, size );
     }
 
 
-    int WINAPI console_ctrl_handler( DWORD  dwCtrlType )
+    int WINAPI console_ctrl_handler( DWORD  ctrl_type )
     {
         std::cout << static_cast<char>(7) << std::endl;
 
-        switch ( dwCtrlType )
+        switch ( ctrl_type )
         {
         case CTRL_C_EVENT:
             std::cout << "Ctrl + C" << std::endl;
@@ -166,57 +152,48 @@ namespace Utility
         // MUST call this before SetConsoleMode
         DWORD mode = 0;
         GetConsoleMode( handle, &mode );
-        mode &= ~disable_mode;
-        SetConsoleMode( handle, mode );
+        SetConsoleMode( handle, mode & ~disable_mode );
     }
 
 
-    void cls( HANDLE output_handle )
-    {
-        COORD coord = { 0, 0 };
-        CONSOLE_SCREEN_BUFFER_INFOEX csbi;
-        csbi.cbSize = sizeof( CONSOLE_SCREEN_BUFFER_INFOEX );
-        GetConsoleScreenBufferInfoEx( output_handle, &csbi );
-        size_t buf_size = csbi.dwSize.X * csbi.dwSize.Y;
-        CHAR_INFO* buf = new CHAR_INFO[buf_size];
-        for ( size_t i = 0; i < buf_size; ++i )
-        {
-            buf[i].Attributes = csbi.wAttributes;
-            buf[i].Char.UnicodeChar = L' ';
-        }
-        SMALL_RECT wrige_region = { 0, 0, csbi.dwSize.X - 1, csbi.dwSize.Y - 1 };
-        WriteConsoleOutput( output_handle, buf, csbi.dwSize, coord, &wrige_region );
-        delete[] buf;
-        buf = NULL;
-    }
-
-
-    void cls2( HANDLE output_handle )
+    void cls( HANDLE handle )
     {
         DWORD written = 0;
         COORD coord = { 0, 0 };
         CONSOLE_SCREEN_BUFFER_INFO csbi;
-        GetConsoleScreenBufferInfo( output_handle, &csbi );
-        size_t buf_size = csbi.dwSize.X * csbi.dwSize.Y;
-        wchar_t* buf = new wchar_t[buf_size];
-        for ( size_t i = 0; i < buf_size; ++i )
-        {
-            buf[i] = L' ';
-        }
-        WriteConsoleOutputCharacterW( output_handle, buf, buf_size, coord, &written );
+        GetConsoleScreenBufferInfo( handle, &csbi );
+        std::wstring buf( csbi.dwSize.X * csbi.dwSize.Y, L' ' );
+        WriteConsoleOutputCharacterW( handle, buf.c_str(), buf.size(), coord, &written );
+        SetConsoleCursorPosition( handle, coord );
     }
 
 
-    void write_console( const std::string& s, int code_page, HANDLE output_handle )
+    void cls2( HANDLE handle )
+    {
+        COORD coord = { 0, 0 };
+        CONSOLE_SCREEN_BUFFER_INFOEX csbi;
+        csbi.cbSize = sizeof( CONSOLE_SCREEN_BUFFER_INFOEX );
+        GetConsoleScreenBufferInfoEx( handle, &csbi );
+        CHAR_INFO ch;
+        ch.Attributes = csbi.wAttributes;
+        ch.Char.UnicodeChar = L' ';
+        std::vector<CHAR_INFO> buf( csbi.dwSize.X * csbi.dwSize.Y, ch );
+        SMALL_RECT wrige_region = { 0, 0, csbi.dwSize.X - 1, csbi.dwSize.Y - 1 };
+        WriteConsoleOutputW( handle, &buf[0], csbi.dwSize, coord, &wrige_region );
+        SetConsoleCursorPosition( handle, coord );
+    }
+
+
+    void write_console( const std::string& s, int code_page, HANDLE handle )
     {
         std::wstring ws = to_wstring( s, code_page );
-        WriteConsoleW( output_handle, ws.c_str(), ws.size(), 0, 0 );
+        WriteConsoleW( handle, ws.c_str(), ws.size(), 0, 0 );
     }
 
 
-    void write_console( const std::wstring& ws, HANDLE output_handle )
+    void write_console( const std::wstring& ws, HANDLE handle )
     {
-        WriteConsoleW( output_handle, ws.c_str(), ws.size(), 0, 0 );
+        WriteConsoleW( handle, ws.c_str(), ws.size(), 0, 0 );
     }
 
 

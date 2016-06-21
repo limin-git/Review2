@@ -22,7 +22,7 @@ public:
 
     ReviewString get_next();
     ReviewString get_previous();
-    static std::string wait_for_input();
+    static std::string wait_user_interaction();
     void set_title();
     void update();
     void update_thread();

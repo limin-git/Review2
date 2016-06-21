@@ -54,13 +54,14 @@ std::string ReviewString::review()
 
     if ( m_string_map.empty() || m_display_format.empty() )
     {
-        std::cout << "\t" << m_string << std::flush;
+        std::cout << "\t";
+        Utility::write_console_on_center( m_string );
     }
     else
     {
         bool should_wait = false;
         bool should_new_line = false;
-        bool is_first = true;
+        bool is_first_part = true;
         std::string first_content;
 
         for ( size_t i = 0; i < m_display_format.size(); ++i )
@@ -69,12 +70,12 @@ std::string ReviewString::review()
 
             if ( ( ch == ',' ) && should_wait )
             {
-                std::string c = ReviewManager::wait_for_input();
+                std::string action = ReviewManager::wait_user_interaction();
 
-                if ( c != "next" )
+                if ( action != "next" )
                 {
-                    system( "CLS" );
-                    return c;
+                    Utility::cls();
+                    return action;
                 }
 
                 std::cout << std::endl;
@@ -92,7 +93,7 @@ std::string ReviewString::review()
 
                 if ( ! first_content.empty() )
                 {
-                    system( "cls" );
+                    Utility::cls();
                     std::cout << "\t";
                     Utility::write_console( first_content );
                     std::cout << std::endl;
@@ -105,11 +106,10 @@ std::string ReviewString::review()
                 }
 
                 std::cout << "\t";
-                //Utility::write_console( content );
 
-                if ( is_first )
+                if ( is_first_part )
                 {
-                    is_first = false;
+                    is_first_part = false;
                     first_content = content;
                     Utility::write_console_on_center( content );
                 }

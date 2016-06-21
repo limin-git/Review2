@@ -55,7 +55,7 @@ ReviewManager::ReviewManager()
 
 void ReviewManager::review()
 {
-    std::string c;
+    std::string action;
     boost::timer::cpu_timer t;
     ReviewString n;
     bool running = true;
@@ -76,54 +76,54 @@ void ReviewManager::review()
             LOG_TRACE << "begin do";
 
             t.start();
-            c = n.review();
+            action = n.review();
 
-            if ( c == "next" )
+            if ( action == "next" )
             {
-                c = wait_for_input();
-                system( "CLS" );
+                action = wait_user_interaction();
+                Utility::cls();
             }
 
-            while ( c == "back" )
+            while ( action == "back" )
             {
-                system( "CLS" );
+                Utility::cls();
                 n = get_previous();
                 m_current_reviewing = &n;
-                c = n.review();
+                action = n.review();
 
-                if ( c == "next" )
+                if ( action == "next" )
                 {
-                    c = wait_for_input();
-                    system( "CLS" );
+                    action = wait_user_interaction();
+                    Utility::cls();
                 }
             }
 
-            if ( c == "quit" )
+            if ( action == "quit" )
             {
                 running = false;
                 break;
             }
 
-            while ( c == "speech" )
+            while ( action == "speech" )
             {
                 n.play_speech();
-                c = wait_for_input();
+                action = wait_user_interaction();
             }
 
-            if ( c == "listen" )
+            if ( action == "listen" )
             {
                 m_is_listening = true;
                 boost::thread t( boost::bind( &ReviewManager::listen_thread, this ) );
-                c = wait_for_input();
+                action = wait_user_interaction();
                 m_is_listening = false;
             }
 
-            if ( c == "delete" )
+            if ( action == "delete" )
             {
                 m_history->disable( n.get_hash() );
             }
 
-            if ( c == "add-to-group" )
+            if ( action == "add-to-group" )
             {
                 m_review_group.push_back( n );
             }
@@ -246,7 +246,7 @@ ReviewString ReviewManager::get_previous()
 }
 
 
-std::string ReviewManager::wait_for_input()
+std::string ReviewManager::wait_user_interaction()
 {
     static HANDLE stdinput = GetStdHandle(STD_INPUT_HANDLE);
     static INPUT_RECORD input_buffer[128];
@@ -503,7 +503,7 @@ void ReviewManager::listen_thread()
             continue;
         }
 
-        system( "CLS" );
+        Utility::cls();
         std::stringstream strm;
         strm << "TITLE listen - " << m_listening_list.size();
         std::string title = strm.str();
