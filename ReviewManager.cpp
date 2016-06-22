@@ -44,17 +44,24 @@ ReviewManager::ReviewManager()
       m_listen_no_string( false ),
       m_listen_all( false ),
       m_review_number( 0 ),
-      m_minimal_review_distance( 10 )
+      m_minimal_review_distance( 10 ),
+      m_running( true )
 {
     m_loader = new Loader;
     m_history = new History;
     m_speech_impl = new Speech;
-    ProgramOptions::connect_to_signal( boost::bind( &ReviewManager::update_option, this, _1 ) );
+    m_connection = ProgramOptions::connect_to_signal( boost::bind( &ReviewManager::update_option, this, _1 ) );
 }
 
 
 ReviewManager::~ReviewManager()
 {
+    show_next_picture( true );
+    m_connection.disconnect();
+
+    m_condition.notify_all();
+    m_update_thread.join();
+
     delete m_speech_impl;
     delete m_history;
     delete m_loader;
@@ -66,15 +73,14 @@ void ReviewManager::review()
     std::string action;
     boost::timer::cpu_timer t;
     ReviewString n;
-    bool running = true;
 
     m_history->initialize();
     m_history->synchronize_history( m_loader->get_string_hash_set() );
     set_title();
     update();
-    new boost::thread( boost::bind( &ReviewManager::update_thread, this ) );
+    m_update_thread = boost::thread( boost::bind( &ReviewManager::update_thread, this ) );
 
-    while ( running )
+    while ( m_running )
     {
         n = get_next();
         m_current_reviewing = &n;
@@ -108,7 +114,7 @@ void ReviewManager::review()
 
             if ( action == "quit" )
             {
-                running = false;
+                m_running = false;
                 break;
             }
 
@@ -136,7 +142,7 @@ void ReviewManager::review()
                 m_review_group.push_back( n );
             }
 
-            if ( m_speech && m_play_back )
+            if ( m_running && m_speech && m_play_back )
             {
                 m_play_back_string.push_back( n );
 
@@ -161,7 +167,7 @@ void ReviewManager::review()
             n.m_speech = NULL;
             LOG_TRACE << "end do";
         }
-        while ( t.elapsed().wall < m_minimal_review_time );
+        while ( m_running && ( t.elapsed().wall < m_minimal_review_time ) );
     }
 }
 
@@ -169,6 +175,8 @@ void ReviewManager::review()
 ReviewString ReviewManager::get_next()
 {
     LOG_TRACE << "begin";
+
+    show_next_picture();
 
     boost::unique_lock<boost::mutex> lock( m_mutex );
 
@@ -398,7 +406,7 @@ void ReviewManager::update()
 
 void ReviewManager::update_thread()
 {
-    while ( true )
+    while ( m_running )
     {
         if ( 0 == m_auto_update_interval )
         {
@@ -409,9 +417,19 @@ void ReviewManager::update_thread()
             }
         }
 
+        if ( !m_running )
+        {
+            break;
+        }
+
         boost::unique_lock<boost::mutex> lock( m_mutex );
         boost::chrono::seconds interval( m_auto_update_interval );
         m_condition.wait_for( lock, interval );
+
+        if ( !m_running )
+        {
+            break;
+        }
 
         if ( ! m_is_listening )
         {
@@ -635,6 +653,21 @@ void ReviewManager::update_option( const boost::program_options::variables_map& 
         m_minimal_review_distance = option_helper.get_value<size_t>( review_minimal_review_distance_option );
         LOG_DEBUG << "review-minimal-review-distance: " << m_minimal_review_distance;
     }
+
+    if ( option_helper.update_one_option<std::string>( system_picture_path, vm ) )
+    {
+        m_picture_path = option_helper.get_value<std::string>( system_picture_path );
+        LOG_DEBUG << "system-picture-path: " << m_picture_path;
+
+        if ( boost::filesystem::exists( m_picture_path ) )
+        {
+            m_picture_dir_it = boost::filesystem::recursive_directory_iterator( m_picture_path );
+        }
+        else
+        {
+            m_picture_dir_it = boost::filesystem::recursive_directory_iterator();
+        }
+    }
 }
 
 
@@ -769,4 +802,24 @@ void ReviewManager::upgrade_hash_algorithm()
     m_history->m_history = new_history;
     m_history->write_history();
     std::cout << "\ndone." << std::endl;
+}
+
+
+void ReviewManager::show_next_picture( bool show_default )
+{
+    boost::filesystem::recursive_directory_iterator& it = m_picture_dir_it;
+    boost::filesystem::recursive_directory_iterator end;
+
+    if ( it != end )
+    {
+        if ( ! is_directory( it.status() )  )
+        {
+            Utility::set_system_wallpaper( it->path().string(), show_default );
+        }
+
+        if ( ++it == end )
+        {
+            it = boost::filesystem::recursive_directory_iterator( m_picture_path );
+        }
+    }
 }

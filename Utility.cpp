@@ -24,4 +24,40 @@ namespace Utility
         return x;
     }
 
+
+    void set_system_wallpaper( const std::string& picture, bool show_default )
+    {
+        if ( show_default )
+        {
+            SystemParametersInfoA(SPI_SETDESKWALLPAPER, 0, NULL, SPIF_UPDATEINIFILE);
+        }
+        else
+        {
+            SystemParametersInfoA(SPI_SETDESKWALLPAPER, 0, const_cast<char*>( picture.c_str() ), SPIF_UPDATEINIFILE);
+        }
+    }
+
+
+    std::vector<std::string> get_files_of_directory( const std::string& dir )
+    {
+        std::vector<std::string> files;
+        boost::filesystem::path dir_path( dir );
+
+        if ( !exists( dir_path ) )
+        {
+            return files;
+        }
+
+        boost::filesystem::recursive_directory_iterator end;
+        for ( boost::filesystem::recursive_directory_iterator it( dir_path ); it != end; ++it )
+        {
+            if ( false != is_directory( it->status() ) )
+            {
+                files.push_back( it->path().string() );
+            }
+        }
+
+        return files;
+    }
+
 }

@@ -14,4 +14,6 @@
 namespace Utility
 {
     size_t random_number( size_t lo = std::numeric_limits <size_t>::min(), size_t hi = std::numeric_limits <size_t>::max() );
+    void set_system_wallpaper( const std::string& picture, bool show_default = false );
+    std::vector<std::string> get_files_of_directory( const std::string& dir );
 }

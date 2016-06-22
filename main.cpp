@@ -37,6 +37,7 @@ int main(int argc, char* argv[])
         ( system_console_width, boost::program_options::value<SHORT>()->default_value( 60 ), "console width" )
         ( system_console_height, boost::program_options::value<SHORT>()->default_value( 5 ), "console height" )
         ( system_console_color, boost::program_options::value<std::string>()->default_value( "0x7F" ), "console color" )
+        ( system_picture_path, boost::program_options::value<std::string>(), "desktop wallpaper path" )
         ;
 
     desc.add( Log::get_description() );

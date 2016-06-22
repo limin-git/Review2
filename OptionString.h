@@ -44,4 +44,4 @@
 #define system_console_width                    "system.console-width"
 #define system_console_height                   "system.console-height"
 #define system_console_color                    "system.console-color"
-
+#define system_picture_path                     "system.picture-path"

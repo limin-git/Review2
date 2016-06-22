@@ -47,6 +47,7 @@ public:
 public:
 
     void upgrade_hash_algorithm();
+    void show_next_picture( bool show_default = false );
 
 public:
 
@@ -80,4 +81,9 @@ public:
     volatile bool m_listen_all;
     size_t m_review_number;
     std::map<size_t, size_t> m_hash_number_map;
+    boost::signals2::connection m_connection;
+    boost::thread m_update_thread;
+    bool m_running;
+    std::string m_picture_path;
+    boost::filesystem::recursive_directory_iterator m_picture_dir_it;
 };

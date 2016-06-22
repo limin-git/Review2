@@ -281,7 +281,7 @@ void History::synchronize_history( const std::set<size_t>& hashes )
         {
             m_history.insert( history_type::value_type( *it, time_list() ) );
             history_changed = true;
-            LOG_DEBUG << "add: " << *it;
+            //LOG_DEBUG << "add: " << *it;
         }
     }
 
