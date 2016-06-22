@@ -134,12 +134,12 @@ size_t Loader::string_hash( const std::string& str )
     std::string s = str;
     static boost::regex e( "(?x) \\[ [a-zA-Z0-9_ -] \\]" );
     s = boost::regex_replace( s, e, "" );
-    static const std::string symbols = Utility::to_string(
-        L" \"\',.?:;!-/#()|<>{}[]~`@$%^&*+\n\t"
-        L"£¬¡£¡¢£¿£¡£»£º¡¤£®¡°¡±¡®¡¯£à£­£½¡«£À£££¤£¥£ª£ß£«£ü¡ª¡ª¡ª¡­¡­¡­¡¶¡·£¨£¨¡¾¡¿¡¸¡¹¡º¡»¡¼¡½¡´¡µ£û£ý",
-        CP_UTF8 );
-    s.erase( std::remove_if( s.begin(), s.end(), boost::is_any_of( symbols.c_str() ) ), s.end() );
     boost::to_lower(s);
+    std::wstring ws = Utility::to_wstring( s, CP_UTF8 );
+    const wchar_t* symbols =L" \"\',.?:;!-/#()|<>{}[]~`@$%^&*+\n\t"
+        L"£¬¡£¡¢£¿£¡£»£º¡¤£®¡°¡±¡®¡¯£à£­£½¡«£À£££¤£¥£ª£ß£«£ü¡ª¡ª¡ª¡­¡­¡­¡¶¡·£¨£¨¡¾¡¿¡¸¡¹¡º¡»¡¼¡½¡´¡µ£û£ý";
+    ws.erase( std::remove_if( ws.begin(), ws.end(), boost::is_any_of( symbols ) ), ws.end() );
+    s = Utility::to_string( ws, CP_UTF8 );
     static boost::hash<std::string> string_hasher;
     size_t hash = string_hasher(s);
     LOG_TRACE << "" << "hash = " << hash << " \t" << s;

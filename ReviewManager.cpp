@@ -172,6 +172,7 @@ ReviewString ReviewManager::get_next()
 
         if ( m_reviewing_list.empty() )
         {
+            set_title();
             return ReviewString();
         }
     }
@@ -192,7 +193,6 @@ ReviewString ReviewManager::get_next()
 
     size_t hash = get_next_hash( m_reviewing_list, get_next_order( m_review_orders, m_review_order_it ) );
     m_reviewing_set.erase( hash );
-    set_title();
     m_review_history.push_back( hash );
     m_history->save_history( hash, std::time(0) );
 
@@ -210,6 +210,7 @@ ReviewString ReviewManager::get_next()
     m_hash_number_map[hash] = m_review_number++;
 
     LOG_TRACE << "end";
+    set_title();
     return ReviewString( hash, m_loader, m_history, m_speech, m_display_format );
 }
 
@@ -323,7 +324,17 @@ std::string ReviewManager::wait_user_interaction()
 void ReviewManager::set_title()
 {
     std::stringstream strm;
-    strm << m_file_name << " - " << m_reviewing_set.size();
+    strm << m_file_name << " - ";
+    
+    if ( 0 == m_reviewing_set.size() && m_history->is_finished() )
+    {
+        strm << "finished.";
+    }
+    else
+    {
+        strm << m_reviewing_set.size();
+    }
+
     SetConsoleTitle( strm.str().c_str() );
 }
 

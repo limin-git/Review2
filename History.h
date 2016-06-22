@@ -5,6 +5,8 @@ typedef std::map<size_t, time_list> history_type;
 
 class History
 {
+    enum { DELETED, FINISHED };
+
 public:
 
     History();
@@ -16,6 +18,7 @@ public:
     size_t get_review_round( size_t hash ) { return m_history[hash].size(); }
     time_list& get_times( size_t hash ) { return m_history[hash]; }
     std::time_t get_last_review_time( size_t hash ) { time_list& t = m_history[hash]; return t.empty() ? 0 : t.back(); }
+    bool is_finished();
 
 public:
 
