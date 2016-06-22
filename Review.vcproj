@@ -184,15 +184,11 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\Console.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ConsoleColor.h"
-				>
-			</File>
-			<File
 				RelativePath=".\ConsoleCommand.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ConsoleUtility.h"
 				>
 			</File>
 			<File
@@ -268,7 +264,51 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TimeUtility.h"
+				>
+			</File>
+			<File
+				RelativePath=".\UnicodeUtility.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Utility.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Utility"
+			>
+			<File
+				RelativePath=".\ConsoleUtility.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SoundUtility.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SoundUtility.h"
+				>
+			</File>
+			<File
+				RelativePath=".\StringUtility.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\StringUtility.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TimeUtility.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\UnicodeUtility.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Utility.cpp"
 				>
 			</File>
 		</Filter>
@@ -314,10 +354,6 @@
 		</File>
 		<File
 			RelativePath=".\Speech.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\Utility.cpp"
 			>
 		</File>
 	</Files>

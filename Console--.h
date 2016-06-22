@@ -17,7 +17,7 @@ public:
         return input;
     }
 
-    static void show_cursor( BOOL visible = true, HANDLE output_handle = stdoutput() )
+    static void show_console_cursor( BOOL visible = true, HANDLE output_handle = stdoutput() )
     {
         CONSOLE_CURSOR_INFO cursor_info;
         GetConsoleCursorInfo( output_handle, &cursor_info );
@@ -29,28 +29,28 @@ public:
         }
     }
 
-    static std::wstring to_wstring( const std ::string& s, int code_page )
+    static std::wstring to_wstring( const std::string& s, int code_page )
     {
         static wchar_t buffer[ 1024 * 1024];
         MultiByteToWideChar( code_page , 0, s. c_str(), - 1, buffer , 1024 * 1024 );
-        return std ::wstring( buffer );
+        return std::wstring( buffer );
     }
 
-    static std::string to_string( const std ::wstring& ws, int code_page )
+    static std::string to_string( const std::wstring& ws, int code_page )
     {
         static char buffer[ 1024 * 1024];
         WideCharToMultiByte( code_page , 0, ws. c_str(), - 1, buffer , 1024 * 1024, 0, 0 );
-        return std ::string( buffer );
+        return std::string( buffer );
     }
 
-    static void fix_utf8_output( HANDLE output_handle = stdoutput() )
+    static void refresh_console_window( HANDLE output_handle = stdoutput() )
     {
         CONSOLE_SCREEN_BUFFER_INFO csbinfo;
         GetConsoleScreenBufferInfo( output_handle, &csbinfo );
         COORD coord = { 0, 0 };
-        CHAR_INFO chiFill;
-        chiFill.Char.UnicodeChar = L' ';
-        ScrollConsoleScreenBuffer( output_handle, &csbinfo.srWindow, NULL, coord, &chiFill  );
+        CHAR_INFO char_fill;
+        char_fill.Char.UnicodeChar = L' ';
+        ScrollConsoleScreenBuffer( output_handle, &csbinfo.srWindow, NULL, coord, &char_fill  );
     }
 
     static void print_font_info( HANDLE output_handle = stdoutput() )
@@ -72,7 +72,7 @@ public:
             << L"FaceName  : " << f.FaceName << std::endl;
     }
 
-    static void set_font( SHORT font_size = 14, const std::wstring& face_name = L"Consolas", HANDLE output_handle = stdoutput() )
+    static void set_console_font( SHORT font_size = 14, const std::wstring& face_name = L"Consolas", HANDLE output_handle = stdoutput() )
     {
         // nFont: (no use)
         // 14 Console
@@ -111,7 +111,7 @@ public:
         }
     }
 
-    static void disable_close_button()
+    static void disable_console_system_buttons()
     {   
         HWND w = GetConsoleWindow();
         HMENU m = GetSystemMenu( w, FALSE );
@@ -121,7 +121,7 @@ public:
         DrawMenuBar( w );
     }
 
-    static void set_color( WORD color, HANDLE output_handle = stdoutput() )
+    static void set_console_color( WORD color, HANDLE output_handle = stdoutput() )
     {
         DWORD written = 0;
         COORD coord = { 0, 0 };
@@ -132,7 +132,7 @@ public:
         FillConsoleOutputAttribute( output_handle, csbi.wAttributes, csbi.dwSize.X * csbi.dwSize.Y, coord, &written ); 
     }
 
-    static void set_window( SHORT col, SHORT row, HANDLE output_handle = stdoutput() )
+    static void set_console_window_size( SHORT col, SHORT row, HANDLE output_handle = stdoutput() )
     {
         COORD coord = { 0, 0 };
         COORD size = { col, row };
@@ -227,7 +227,7 @@ public:
         WriteConsoleOutputCharacterW( output_handle, buf, buf_size, coord, &written );
     }
 
-    static void write_center( const std::string& s, HANDLE output = GetStdHandle( STD_OUTPUT_HANDLE ) )
+    static void write_console_on_center( const std::string& s, HANDLE output = GetStdHandle( STD_OUTPUT_HANDLE ) )
     {
         std::wstring ws = to_wstring( s, CP_UTF8 );
         std::string as = to_string( ws, 936 );

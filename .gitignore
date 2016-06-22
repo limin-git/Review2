@@ -1,3 +1,5 @@
+Debug/
+Release/
 *.obj
 *.dep
 *.manifest
@@ -21,3 +23,4 @@
 *.txt
 *.history
 *.review
+*.rsp

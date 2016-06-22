@@ -6,6 +6,8 @@
 #include "ProgramOptions.h"
 #include "OptionUpdateHelper.h"
 
+// TODO:
+// only save reviewed, not all
 
 History::History()
     : m_max_cache_size( 100 ),
@@ -71,7 +73,7 @@ void History::initialize()
         write_history();
     }
 
-    LOG_TRACE << "history is updated.\n" << Utility::get_history_string( m_history );
+    LOG_TRACE << "history is updated.\n" << string_from_history( m_history );
 }
 
 
@@ -172,7 +174,7 @@ history_type History::load_history_from_file( const std::string& file )
         }
     }
 
-    LOG_TRACE << file << std::endl << Utility::get_history_string( history );
+    LOG_TRACE << file << std::endl << string_from_history( history );
     return history;
 }
 
@@ -187,17 +189,29 @@ void History::merge_history( const history_type& history )
         size_t round = history_times.size();
         std::time_t last_time = ( round ? history_times.back() : 0 );
 
-        if ( last_time == 0 && round == 1 )
+        if ( last_time == DELETED && round == 1 )
         {
+            continue;
+        }
+
+        if ( last_time == FINISHED && round == 1 ) // finished
+        {
+            continue;
+        }
+
+        if ( m_schedule.size() <= history_times.size() ) // finished
+        {
+            history_times.clear();
+            history_times.push_back( FINISHED );
             continue;
         }
 
         for ( size_t i = 0; i < times.size(); ++i )
         {
-            if ( times[i] == 0 )
+            if ( times[i] == DELETED ) // deleted
             {
                 history_times.clear();
-                history_times.push_back( 0 );
+                history_times.push_back( DELETED );
                 break;
             }
 
@@ -206,19 +220,26 @@ void History::merge_history( const history_type& history )
                 history_times.push_back( times[i] );
                 last_time = times[i];
                 round++;
+
+                if ( m_schedule.size() <= round )
+                {
+                    history_times.clear();
+                    history_times.push_back( FINISHED );
+                    break;
+                }
             }
-            else if ( last_time < times[i] )
+            else if ( last_time < times[i] ) // schedule changed
             {
                 history_times.back() = times[i];
             }
             else
             {
                 LOG_DEBUG
-                    << " ignore review time: " << Utility::time_string( times[i] )
+                    << " ignore review time: " << Utility::string_from_time_t( times[i] )
                     << " round = " << round
                     << " last-review-time = " << last_time
-                    << " elapsed = " << Utility::time_duration_string( times[i] - last_time )
-                    << " span = " << Utility::time_duration_string( m_schedule[round] )
+                    << " elapsed = " << Utility::duration_string_from_seconds( times[i] - last_time )
+                    << " span = " << Utility::duration_string_from_seconds( m_schedule[round] )
                     ;
             }
         }
@@ -234,7 +255,7 @@ void History::synchronize_history( const std::set<size_t>& hashes )
     {
         if ( hashes.find( it->first ) == hashes.end() )
         {
-            LOG_DEBUG << "erase: " << it->first << " " << Utility::get_time_list_string( it->second );
+            LOG_DEBUG << "erase: " << it->first << " " << Utility::duration_string_from_time_list( it->second );
             m_history.erase( it++ );
             history_changed = true;
         }
@@ -267,20 +288,27 @@ bool History::is_expired( size_t hash, const std::time_t& current_time )
     time_list& times = m_history[hash];
     size_t review_round = times.size();
 
-    if ( 0 == review_round )
+    if ( 0 == review_round ) // new added
     {
         return true;
     }
 
-    if ( m_schedule.size() == review_round )
+    std::time_t last_review_time = times.back();
+
+    if ( last_review_time == DELETED )
     {
         return false;
     }
 
-    std::time_t last_review_time = times.back();
-
-    if ( last_review_time == 0 )
+    if ( last_review_time == FINISHED )
     {
+        return false;
+    }
+
+    if ( m_schedule.size() <= review_round ) // finished
+    {
+        times.clear();
+        times.push_back( 1 );
         return false;
     }
 
@@ -293,7 +321,7 @@ bool History::is_expired( size_t hash, const std::time_t& current_time )
 
     if ( m_once_per_days )
     {
-        if ( current_time - last_review_time < m_once_per_days )
+        if ( current_time - last_review_time < m_once_per_days * 24 * 3600 )
         {
             return false;
         }
@@ -312,7 +340,7 @@ bool History::is_disabled( size_t hash )
         return false;
     }
 
-    return ( ( 1 == it->second.size() ) && ( 0 == it->second.back() ) );
+    return ( ( 1 == it->second.size() ) && ( DELETED == it->second.front() || FINISHED == it->second.front() ) );
 }
 
 
@@ -330,6 +358,27 @@ std::set<size_t> History::get_expired()
     }
 
     return expired;
+}
+
+
+bool History::is_finished()
+{
+    for ( history_type::iterator it = m_history.begin(); it != m_history.end(); ++it )
+    {
+        if ( it->second.empty() )
+        {
+            return false;
+        }
+
+        time_t first_time = it->second.front();
+
+        if ( first_time != DELETED && first_time != FINISHED )
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 
@@ -381,4 +430,34 @@ void History::update_option( const boost::program_options::variables_map& vm )
         LOG_DEBUG << "review-once-per-days: " << m_once_per_days;
         m_once_per_days *= 3600 * 24;
     }
+}
+
+
+std::string History::string_from_history( const history_type& history )
+{
+    std::stringstream os;
+
+    for ( history_type::const_iterator it = history.begin(); it != history.end(); ++it )
+    {
+        size_t hash = it->first;
+        const time_list& times = it->second;
+        os << hash;
+
+        if ( times.empty() )
+        {
+            os << std::endl;
+            continue;
+        }
+
+        os << " " << Utility::string_from_time_t( times[0] );
+
+        if ( 1 < times.size() )
+        {
+            os << Utility::duration_string_from_time_list( times );
+        }
+
+        os << std::endl;
+    }
+
+    return os.str();
 }

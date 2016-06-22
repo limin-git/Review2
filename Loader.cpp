@@ -7,6 +7,7 @@
 #include "ProgramOptions.h"
 
 
+
 Loader::Loader( boost::function<size_t (const std::string&)> hash_function )
     : m_last_write_time( 0 ),
       m_hash_function( hash_function )
@@ -60,7 +61,7 @@ void Loader::reload()
         return;
     }
 
-    LOG_DEBUG << "last-writ-time: " << Utility::time_string( m_last_write_time ) << ", new last-write-time: " << Utility::time_string( t );
+    LOG_DEBUG << "last-writ-time: " << Utility::string_from_time_t( m_last_write_time ) << ", new last-write-time: " << Utility::string_from_time_t( t );
 
     std::ifstream is( m_file_name.c_str() );
 
@@ -131,25 +132,14 @@ void Loader::reload()
 size_t Loader::string_hash( const std::string& str )
 {
     std::string s = str;
-
-    static boost::regex e( "(?x)\\[ [a-zA-Z0-9_ -]+ \\]" );
+    static boost::regex e( "(?x) \\[ [a-zA-Z0-9_ -] \\]" );
     s = boost::regex_replace( s, e, "" );
-
-    const char* chinese_chars[] =
-    {
-        "¡¡", "£¬", "¡£", "¡¢", "£¿", "£¡", "£»", "£º", "¡¤", "£®", "¡°", "¡±", "¡®", "¡¯",
-        "£à", "£­", "£½", "¡«", "£À", "££", "£¤", "£¥", "£ª", "£ß", "£«", "£ü", "¡ª", "¡ª¡ª",  "¡­", "¡­¡­",
-        "¡¶", "¡·", "£¨", "£¨", "¡¾", "¡¿", "¡¸", "¡¹", "¡º", "¡»", "¡¼", "¡½", "¡´", "¡µ", "£û", "£ý",
-        "\\n", "\\t"
-    };
-
-    for ( size_t i = 0; i < sizeof(chinese_chars) / sizeof(char*); ++i )
-    {
-        boost::erase_all( s, chinese_chars[i] );
-    }
-
-    s.erase( std::remove_if( s.begin(), s.end(), boost::is_any_of( " \"\',.?:;!-/#()|<>{}[]~`@$%^&*+\n\t" ) ), s.end() );
     boost::to_lower(s);
+    std::wstring ws = Utility::to_wstring( s, CP_UTF8 );
+    const wchar_t* symbols =L" \"\',.?:;!-/#()|<>{}[]~`@$%^&*+\n\t"
+        L"£¬¡£¡¢£¿£¡£»£º¡¤£®¡°¡±¡®¡¯£à£­£½¡«£À£££¤£¥£ª£ß£«£ü¡ª¡ª¡ª¡­¡­¡­¡¶¡·£¨£¨¡¾¡¿¡¸¡¹¡º¡»¡¼¡½¡´¡µ£û£ý";
+    ws.erase( std::remove_if( ws.begin(), ws.end(), boost::is_any_of( symbols ) ), ws.end() );
+    s = Utility::to_string( ws, CP_UTF8 );
     static boost::hash<std::string> string_hasher;
     size_t hash = string_hasher(s);
     LOG_TRACE << "" << "hash = " << hash << " \t" << s;

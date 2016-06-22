@@ -9,7 +9,6 @@
 #include "OptionString.h"
 #include "ProgramOptions.h"
 #include "OptionUpdateHelper.h"
-#include "Console.h"
 
 
 struct Order
@@ -56,7 +55,7 @@ ReviewManager::ReviewManager()
 
 void ReviewManager::review()
 {
-    std::string c;
+    std::string action;
     boost::timer::cpu_timer t;
     ReviewString n;
     bool running = true;
@@ -77,54 +76,54 @@ void ReviewManager::review()
             LOG_TRACE << "begin do";
 
             t.start();
-            c = n.review();
+            action = n.review();
 
-            if ( c == "next" )
+            if ( action == "next" )
             {
-                c = wait_for_input();
-                system( "CLS" );
+                action = wait_user_interaction();
+                Utility::cls();
             }
 
-            while ( c == "back" )
+            while ( action == "back" )
             {
-                system( "CLS" );
+                Utility::cls();
                 n = get_previous();
                 m_current_reviewing = &n;
-                c = n.review();
+                action = n.review();
 
-                if ( c == "next" )
+                if ( action == "next" )
                 {
-                    c = wait_for_input();
-                    system( "CLS" );
+                    action = wait_user_interaction();
+                    Utility::cls();
                 }
             }
 
-            if ( c == "quit" )
+            if ( action == "quit" )
             {
                 running = false;
                 break;
             }
 
-            while ( c == "speech" )
+            while ( action == "speech" )
             {
                 n.play_speech();
-                c = wait_for_input();
+                action = wait_user_interaction();
             }
 
-            if ( c == "listen" )
+            if ( action == "listen" )
             {
                 m_is_listening = true;
                 boost::thread t( boost::bind( &ReviewManager::listen_thread, this ) );
-                c = wait_for_input();
+                action = wait_user_interaction();
                 m_is_listening = false;
             }
 
-            if ( c == "delete" )
+            if ( action == "delete" )
             {
                 m_history->disable( n.get_hash() );
             }
 
-            if ( c == "add-to-group" )
+            if ( action == "add-to-group" )
             {
                 m_review_group.push_back( n );
             }
@@ -142,7 +141,7 @@ void ReviewManager::review()
 
                 for ( std::list<ReviewString>::iterator it = m_play_back_string.begin(); it != m_play_back_string.end(); ++it )
                 {
-                    std::vector<std::string> w2 = Utility::extract_words( it->get_string() );
+                    std::vector<std::string> w2 = Utility::extract_strings_in_braces( it->get_string() );
                     w.insert( w.end(), w2.begin(), w2.end() );
                 }
 
@@ -173,6 +172,7 @@ ReviewString ReviewManager::get_next()
 
         if ( m_reviewing_list.empty() )
         {
+            set_title();
             return ReviewString();
         }
     }
@@ -193,7 +193,6 @@ ReviewString ReviewManager::get_next()
 
     size_t hash = get_next_hash( m_reviewing_list, get_next_order( m_review_orders, m_review_order_it ) );
     m_reviewing_set.erase( hash );
-    set_title();
     m_review_history.push_back( hash );
     m_history->save_history( hash, std::time(0) );
 
@@ -211,6 +210,7 @@ ReviewString ReviewManager::get_next()
     m_hash_number_map[hash] = m_review_number++;
 
     LOG_TRACE << "end";
+    set_title();
     return ReviewString( hash, m_loader, m_history, m_speech, m_display_format );
 }
 
@@ -247,13 +247,13 @@ ReviewString ReviewManager::get_previous()
 }
 
 
-std::string ReviewManager::wait_for_input()
+std::string ReviewManager::wait_user_interaction()
 {
     static HANDLE stdinput = GetStdHandle(STD_INPUT_HANDLE);
     static INPUT_RECORD input_buffer[128];
     static DWORD num_read = 0;
 
-    Console::disable_console_mode( ENABLE_QUICK_EDIT_MODE  );
+    Utility::disable_console_mode( ENABLE_QUICK_EDIT_MODE  );
     SetConsoleMode( stdinput, ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT );
 
     while ( true )
@@ -324,7 +324,17 @@ std::string ReviewManager::wait_for_input()
 void ReviewManager::set_title()
 {
     std::stringstream strm;
-    strm << m_file_name << " - " << m_reviewing_set.size();
+    strm << m_file_name << " - ";
+    
+    if ( 0 == m_reviewing_set.size() && m_history->is_finished() )
+    {
+        strm << "finished.";
+    }
+    else
+    {
+        strm << m_reviewing_set.size();
+    }
+
     SetConsoleTitle( strm.str().c_str() );
 }
 
@@ -417,7 +427,7 @@ std::ostream& ReviewManager::output_hash_list( std::ostream& os, const std::list
 
         os
             << r << "\t"
-            << Utility::time_string( t ) << "\t"
+            << Utility::string_from_time_t( t ) << "\t"
             << s.size() << "\t"
             << s << "\n";
             ;
@@ -449,7 +459,7 @@ std::string ReviewManager::get_new_expired_string( const std::set<size_t>& os,  
         std::time_t last_review = m_history->get_last_review_time( hash );
         std::time_t elapsed = std::time(0) - last_review;
         const std::string& s = m_loader->get_string( *it );
-        strm << std::endl << "expired: " << round << " (" << Utility::time_duration_string(elapsed) << ") " << s;
+        strm << std::endl << "expired: " << round << " (" << Utility::duration_string_from_seconds(elapsed) << ") " << s;
     }
 
     return strm.str();
@@ -485,7 +495,7 @@ void ReviewManager::listen_thread()
     {
         size_t hash = get_next_hash( m_listening_list, get_next_order( listen_orders, listen_orders_it ) );
         const std::string& s = m_loader->get_string( hash );
-        std::vector<std::string> words = Utility::extract_words( s );
+        std::vector<std::string> words = Utility::extract_strings_in_braces( s );
 
         if ( words.empty() )
         {
@@ -504,7 +514,7 @@ void ReviewManager::listen_thread()
             continue;
         }
 
-        system( "CLS" );
+        Utility::cls();
         std::stringstream strm;
         strm << "TITLE listen - " << m_listening_list.size();
         std::string title = strm.str();

@@ -65,11 +65,11 @@ struct QueueProcessor
             }
             catch ( std::exception& e )
             {
-                LOG << e.what();
+                //LOG << e.what();
             }
             catch ( ... )
             {
-                LOG << "caught exception";
+                //LOG << "caught exception";
             }
         }
     }

@@ -3,7 +3,7 @@
 #include "OptionString.h"
 #include "OptionUpdateHelper.h"
 #include "ProgramOptions.h"
-#include "Console.h"
+#include "Utility.h"
 
 
 ConsoleCommand::ConsoleCommand()
@@ -14,8 +14,8 @@ ConsoleCommand::ConsoleCommand()
     m_cp = GetConsoleCP();
     m_output_cp = GetConsoleOutputCP();
 
-    show_cursor( false );
-    disable_close_button();
+    show_console_cursor( false );
+    disable_console_system_buttons();
 
     ProgramOptions::connect_to_signal( boost::bind( &ConsoleCommand::update_option, this, _1 ) );
 }
@@ -190,7 +190,7 @@ void ConsoleCommand::set_console_color( WORD color )
 }
 
 
-void ConsoleCommand::show_cursor( BOOL visible )
+void ConsoleCommand::show_console_cursor( BOOL visible )
 {
     CONSOLE_CURSOR_INFO cursor_info;
     GetConsoleCursorInfo( m_handle, &cursor_info );
@@ -203,7 +203,7 @@ void ConsoleCommand::show_cursor( BOOL visible )
 }
 
 
-void ConsoleCommand::disable_close_button()
+void ConsoleCommand::disable_console_system_buttons()
 {
     HWND w = GetConsoleWindow();
     HMENU m = GetSystemMenu( w, FALSE );

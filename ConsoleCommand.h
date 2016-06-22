@@ -17,8 +17,8 @@ public:
     void set_console_height( SHORT height );
     void set_console_size( SHORT col, SHORT row );
     void set_console_color( WORD color );
-    void show_cursor( BOOL visible = true );
-    void disable_close_button();
+    void show_console_cursor( BOOL visible = true );
+    void disable_console_system_buttons();
 
 public:
 
