@@ -128,7 +128,7 @@ std::string ReviewString::review()
     if ( m_history )
     {
         LOG_DEBUG
-            << m_string << std::endl
+            << WSTRING(m_string) << std::endl
             << "(round: " << m_history->get_review_round( m_hash ) << ") "
             << Utility::duration_string_from_time_list( m_history->get_times( m_hash ) );
     }

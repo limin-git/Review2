@@ -80,11 +80,6 @@ int main(int argc, char* argv[])
             return 0;
         }
 
-        //Console::show_console_cursor( false );
-        //Console::set_console_font( 20, L"ÐÂËÎÌå" );
-        //Console::set_console_window_size( 80, 8 );
-        //Console::disable_console_system_buttons();
-        //Console::set_console_color( BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE );
         rm.review();
     }
     catch ( boost::filesystem::filesystem_error& e )

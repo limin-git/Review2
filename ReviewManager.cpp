@@ -53,6 +53,14 @@ ReviewManager::ReviewManager()
 }
 
 
+ReviewManager::~ReviewManager()
+{
+    delete m_speech_impl;
+    delete m_history;
+    delete m_loader;
+}
+
+
 void ReviewManager::review()
 {
     std::string action;
@@ -479,7 +487,7 @@ void ReviewManager::listen_thread()
             m_listening_list.assign( m_all.begin(), m_all.end() );
             m_listening_list.erase( std::remove_if( m_listening_list.begin(),
                                                     m_listening_list.end(),
-                                                    boost::bind( &History::is_disabled, m_history, _1 ) ),
+                                                    boost::bind( &History::is_not_reviewable, m_history, _1 ) ),
                                     m_listening_list.end() );
         }
         else

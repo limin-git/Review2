@@ -15,6 +15,7 @@ public:
 public:
 
     ReviewManager();
+    ~ReviewManager();
     void review();
     void listen_thread();
 

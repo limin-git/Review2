@@ -6,8 +6,6 @@
 #include "ProgramOptions.h"
 #include "OptionUpdateHelper.h"
 
-// TODO:
-// only save reviewed, not all
 
 History::History()
     : m_max_cache_size( 100 ),
@@ -41,7 +39,15 @@ History::History()
         LOG_TRACE << "review.schedule(" << strings.size() << "): " << schedule;
     }
 
-    ProgramOptions::connect_to_signal( boost::bind( &History::update_option, this, _1 ) );
+    m_connection = ProgramOptions::connect_to_signal( boost::bind( &History::update_option, this, _1 ) );
+}
+
+
+History::~History()
+{
+    m_connection.disconnect();
+    write_history();
+    clean_review_cache();
 }
 
 
@@ -103,6 +109,7 @@ void History::save_history( size_t hash, std::time_t current_time )
 
     if ( m_review_stream.fail() )
     {
+        m_review_stream.clear();
         LOG << "failed.";
     }
 
@@ -129,9 +136,12 @@ void History::write_history()
 
     for ( history_type::const_iterator it = m_history.begin(); it != m_history.end(); ++it )
     {
-        os << it->first << " ";
-        std::copy( it->second.begin(), it->second.end(), std::ostream_iterator<std::time_t>(os, " ") );
-        os << std::endl;
+        if ( ! it->second.empty() )
+        {
+            os << it->first << " ";
+            std::copy( it->second.begin(), it->second.end(), std::ostream_iterator<std::time_t>(os, " ") );
+            os << std::endl;
+        }
     }
 
     LOG_DEBUG << "update history, size = " << m_history.size();
@@ -331,7 +341,7 @@ bool History::is_expired( size_t hash, const std::time_t& current_time )
 }
 
 
-bool History::is_disabled( size_t hash )
+bool History::is_not_reviewable( size_t hash )
 {
     history_type::iterator it = m_history.find( hash );
 

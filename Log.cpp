@@ -4,12 +4,12 @@
 BOOST_LOG_ATTRIBUTE_KEYWORD(debug_level_attribute, "Level", std::string)
 
 
-boost::log::sources::logger m_log;
-boost::log::sources::logger m_log_error;
-boost::log::sources::logger m_log_info;
-boost::log::sources::logger m_log_debug;
-boost::log::sources::logger m_log_trace;
-boost::log::sources::logger m_log_test;
+boost::log::sources::wlogger m_log;
+boost::log::sources::wlogger m_log_error;
+boost::log::sources::wlogger m_log_info;
+boost::log::sources::wlogger m_log_debug;
+boost::log::sources::wlogger m_log_trace;
+boost::log::sources::wlogger m_log_test;
 
 
 using namespace boost::log;
@@ -123,6 +123,8 @@ void Log::initialize( const boost::program_options::variables_map& vm )
                     );
 
                 m_file_sink->set_formatter( m_formatter );
+                std::locale loc = boost::locale::generator()("en_US.UTF-8"); // TODO: crash when logging wide characters
+                m_file_sink->imbue( loc );
             }
         }
 

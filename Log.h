@@ -9,15 +9,15 @@ struct Log
 };
 
 
-extern boost::log::sources::logger m_log;
-extern boost::log::sources::logger m_log_error;
-extern boost::log::sources::logger m_log_info;
-extern boost::log::sources::logger m_log_debug;
-extern boost::log::sources::logger m_log_trace;
-extern boost::log::sources::logger m_log_test;
+extern boost::log::sources::wlogger m_log;
+extern boost::log::sources::wlogger m_log_error;
+extern boost::log::sources::wlogger m_log_info;
+extern boost::log::sources::wlogger m_log_debug;
+extern boost::log::sources::wlogger m_log_trace;
+extern boost::log::sources::wlogger m_log_test;
 
 
-#define SOURCE_INFO __FUNCTION__ << " - "
+#define SOURCE_INFO __FUNCTION__ << L" - "
 #define LOG         BOOST_LOG(m_log)        << SOURCE_INFO
 #define LOG_ERROR   BOOST_LOG(m_log_error)  << SOURCE_INFO
 #define LOG_INFO    BOOST_LOG(m_log_info)   << SOURCE_INFO

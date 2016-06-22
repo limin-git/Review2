@@ -20,7 +20,6 @@ Loader::Loader( boost::function<size_t (const std::string&)> hash_function )
 
 const std::set<size_t>& Loader::get_string_hash_set()
 {
-    boost::unique_lock<boost::mutex> lock( m_mutex );
     return m_string_hash_set;
 }
 
@@ -71,7 +70,7 @@ void Loader::reload()
         return;
     }
 
-    int code_page = 936;
+    int code_page = CP_ACP;
 
     {
         // UTF-8: EF BB BF
@@ -103,13 +102,16 @@ void Loader::reload()
 
         if ( code_page != CP_UTF8 )
         {
-            std::wstring ws = Utility::to_wstring( s, code_page );
-            s = Utility::to_string( ws, CP_UTF8 );
+            s = Utility::to_string( s, code_page, CP_UTF8 );
         }
 
         size_t hash = m_hash_function( s );
-        string_hash_set.insert( hash );
-        hash_2_string_map[hash] = s;
+
+        if ( hash != 0 )
+        {
+            string_hash_set.insert( hash );
+            hash_2_string_map[hash] = s;
+        }
     }
 
     if ( m_string_hash_set != string_hash_set )
@@ -139,10 +141,16 @@ size_t Loader::string_hash( const std::string& str )
     const wchar_t* symbols =L" \"\',.?:;!-/#()|<>{}[]~`@$%^&*+\n\t"
         L"£¬¡£¡¢£¿£¡£»£º¡¤£®¡°¡±¡®¡¯£à£­£½¡«£À£££¤£¥£ª£ß£«£ü¡ª¡ª¡ª¡­¡­¡­¡¶¡·£¨£¨¡¾¡¿¡¸¡¹¡º¡»¡¼¡½¡´¡µ£û£ý";
     ws.erase( std::remove_if( ws.begin(), ws.end(), boost::is_any_of( symbols ) ), ws.end() );
+
+    if ( ws.empty() )
+    {
+        return 0;
+    }
+
     s = Utility::to_string( ws, CP_UTF8 );
     static boost::hash<std::string> string_hasher;
     size_t hash = string_hasher(s);
-    LOG_TRACE << "" << "hash = " << hash << " \t" << s;
+    LOG_TRACE << "hash = " << hash << " \t" << WSTRING(s);
     return hash;
 }
 

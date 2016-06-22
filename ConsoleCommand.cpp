@@ -8,8 +8,6 @@
 
 ConsoleCommand::ConsoleCommand()
 {
-    m_stdoutput = GetStdHandle( STD_OUTPUT_HANDLE );
-    //m_handle = CreateConsoleScreenBuffer( GENERIC_READ | GENERIC_WRITE, 0, 0, CONSOLE_TEXTMODE_BUFFER, 0 );
     m_handle = GetStdHandle( STD_OUTPUT_HANDLE );
     m_cp = GetConsoleCP();
     m_output_cp = GetConsoleOutputCP();
@@ -25,7 +23,6 @@ ConsoleCommand::~ConsoleCommand()
 {
     SetConsoleCP( m_cp );
     SetConsoleOutputCP( m_output_cp );
-    //CloseHandle( m_handle );
 }
 
 

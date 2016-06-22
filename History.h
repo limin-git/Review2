@@ -10,6 +10,7 @@ class History
 public:
 
     History();
+    ~History();
     void initialize();
     void save_history( size_t hash, std::time_t current_time );
     void disable( size_t hash ) { save_history( hash, 0 ); }
@@ -25,7 +26,7 @@ public:
     void write_history();
     void merge_history( const history_type& history );
     bool is_expired( size_t hash, const std::time_t& current_time );
-    bool is_disabled( size_t hash );
+    bool is_not_reviewable( size_t hash );
     void clean_review_cache();
 
 public:
@@ -50,4 +51,5 @@ public:
     size_t m_cache_size;
     time_list m_schedule;
     volatile size_t m_once_per_days;
+    boost::signals2::connection m_connection;
 };
