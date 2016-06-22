@@ -47,7 +47,7 @@ public:
 public:
 
     void upgrade_hash_algorithm();
-    void show_next_picture( bool show_default = false );
+    void show_next_picture( const std::string& path = "" );
 
 public:
 

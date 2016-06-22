@@ -56,7 +56,7 @@ ReviewManager::ReviewManager()
 
 ReviewManager::~ReviewManager()
 {
-    show_next_picture( true );
+    show_next_picture( "C:\\Windows\\Web\\Wallpaper\\Theme1\\img1.jpg" );
     m_connection.disconnect();
 
     m_condition.notify_all();
@@ -805,7 +805,7 @@ void ReviewManager::upgrade_hash_algorithm()
 }
 
 
-void ReviewManager::show_next_picture( bool show_default )
+void ReviewManager::show_next_picture( const std::string& path )
 {
     boost::filesystem::recursive_directory_iterator& it = m_picture_dir_it;
     boost::filesystem::recursive_directory_iterator end;
@@ -814,12 +814,25 @@ void ReviewManager::show_next_picture( bool show_default )
     {
         if ( ! is_directory( it.status() )  )
         {
-            Utility::set_system_wallpaper( it->path().string(), show_default );
+            if ( path.empty() )
+            {
+                Utility::set_system_wallpaper( it->path().string() );
+            }
+            else
+            {
+                Utility::set_system_wallpaper( path );
+                return;
+            }
         }
 
-        if ( ++it == end )
+        size_t step = Utility::random_number( 1, 100 );
+
+        for ( size_t i = 0; i < step; ++i )
         {
-            it = boost::filesystem::recursive_directory_iterator( m_picture_path );
+            if ( ++it == end )
+            {
+                it = boost::filesystem::recursive_directory_iterator( m_picture_path );
+            }
         }
     }
 }

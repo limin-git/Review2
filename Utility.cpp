@@ -25,16 +25,9 @@ namespace Utility
     }
 
 
-    void set_system_wallpaper( const std::string& picture, bool show_default )
+    void set_system_wallpaper( const std::string& picture )
     {
-        if ( show_default )
-        {
-            SystemParametersInfoA(SPI_SETDESKWALLPAPER, 0, NULL, SPIF_UPDATEINIFILE);
-        }
-        else
-        {
-            SystemParametersInfoA(SPI_SETDESKWALLPAPER, 0, const_cast<char*>( picture.c_str() ), SPIF_UPDATEINIFILE);
-        }
+        SystemParametersInfoA(SPI_SETDESKWALLPAPER, 0, const_cast<char*>( picture.c_str() ), SPIF_UPDATEINIFILE);
     }
 
 
