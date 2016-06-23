@@ -59,9 +59,10 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    std::string file = vm[file_name_option].as<std::string>();
+    std::string file_name = vm[file_name_option].as<std::string>();
+    Utility::remove_if_isany_of( file_name, ".\\|/:<>?*\"" );
 
-    if ( ::CreateMutex( NULL, FALSE, file.c_str() ) == NULL || GetLastError() == ERROR_ALREADY_EXISTS )
+    if ( ::CreateMutex( NULL, FALSE, file_name.c_str() ) == NULL || GetLastError() == ERROR_ALREADY_EXISTS )
     {
         std::cout << "another instance is running." << std::endl;
         system( "pause" );

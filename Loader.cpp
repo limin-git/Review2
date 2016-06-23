@@ -141,6 +141,7 @@ size_t Loader::string_hash( const std::string& str )
     const wchar_t* symbols =L" \"\',.?:;!-/#()|<>{}[]~`@$%^&*+\n\t"
         L"£¬¡£¡¢£¿£¡£»£º¡¤£®¡°¡±¡®¡¯£à£­£½¡«£À£££¤£¥£ª£ß£«£ü¡ª¡ª¡ª¡­¡­¡­¡¶¡·£¨£¨¡¾¡¿¡¸¡¹¡º¡»¡¼¡½¡´¡µ£û£ý";
     ws.erase( std::remove_if( ws.begin(), ws.end(), boost::is_any_of( symbols ) ), ws.end() );
+    Utility::remove_if_isany_of(ws, symbols  );
 
     if ( ws.empty() )
     {

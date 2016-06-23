@@ -20,7 +20,6 @@ namespace Utility
             }
         }
 
-        //LOG_TRACE << x << "(low = " << lo << ", high = " << hi << ")";
         return x;
     }
 

@@ -21,10 +21,18 @@ namespace Utility
     }
 
 
-    std::vector<std::string> extract_strings_in_braces( const std::string& s )
+    std::vector<std::string> extract_strings_in_braces( const std::string& s, const char lc, const char rc )
     {
         std::vector<std::string> words;
-        static const boost::regex e( "(?x)\\{ ( [^{}]+ ) \\}" );
+        static boost::regex e;
+
+        if ( e.empty() )
+        {
+            std::stringstream strm;
+            strm << "\\" << lc << "([^" << lc << rc << "]+)\\" << rc;
+            e.assign( strm.str() );
+        }
+
         boost::sregex_iterator it( s.begin(), s.end(), e );
         boost::sregex_iterator end;
 
