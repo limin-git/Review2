@@ -11,6 +11,8 @@ ConsoleCommand::ConsoleCommand()
     m_handle = GetStdHandle( STD_OUTPUT_HANDLE );
     m_cp = GetConsoleCP();
     m_output_cp = GetConsoleOutputCP();
+    m_screen_buffer.cbSize = sizeof( CONSOLE_SCREEN_BUFFER_INFOEX );
+    GetConsoleScreenBufferInfoEx( m_handle, &m_screen_buffer );
 
     show_console_cursor( false );
     disable_console_system_buttons();
